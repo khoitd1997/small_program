@@ -1,0 +1,2 @@
+add_library(license_calculator INTERFACE)
+target_include_directories(license_calculator SYSTEM INTERFACE include)
