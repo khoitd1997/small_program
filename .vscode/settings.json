@@ -1,5 +1,4 @@
 {
-    "editor.formatOnSave": true,
     "files.associations": {
         "*.cu": "c",
         "*.tdd": "makefile",
@@ -49,5 +48,6 @@
         "algorithm": "cpp",
         "iostream": "cpp"
     },
-    "C_Cpp.default.cppStandard": "c++17"
+    "C_Cpp.default.cppStandard": "c++17",
+    "editor.formatOnSave": true
 }
