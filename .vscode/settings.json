@@ -46,7 +46,8 @@
         "functional": "cpp",
         "variant": "cpp",
         "algorithm": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "*.json": "jsonc"
     },
     "C_Cpp.default.cppStandard": "c++17",
     "editor.formatOnSave": true
