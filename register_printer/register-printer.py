@@ -1,11 +1,11 @@
 #!/usr/local/bin/python3
 
+import os
 import sys
-import copy
-from typing import Tuple, List
+import mmap
+import resource
 
-# TODO: Add json parsing mode
-# TODO: Make this thing easy to be called from inline of things like C++
+from typing import Tuple, List
 
 # based on this datasheet: https://cdn-shop.adafruit.com/datasheets/BST-BMP280-DS001-11.pdf
 testReg = {
@@ -14,6 +14,10 @@ testReg = {
     #
     # base address all registers offset are based on
     "BaseAddress": "0xB00A0000",
+    # How many bits to access when reading a register
+    "AccessWidth": "32",
+    # Endianess of the register, can be "little" or "big"
+    "Endian": "little",
     #
     # example object that describes all the relevant field of the register
     # it will only print the fields you specified so you can skip over unimportant fields like
@@ -105,10 +109,33 @@ def parseRegId(regId: str) -> Tuple[str, int, str]:
     return tmpArray[0], stringWithBaseToNum(tmpArray[1]), tmpArray[1]
 
 
-def getRegValue(regAbsAddr: int) -> int:
-    # TODO: Map /dev/mem here to read register
+# TODO: remove when done testing
+testMode = 1
 
-    return (0b101 << 2) | (0b100 << 5)
+
+def getRegValue(regAbsAddr: int, accessWidthInBit: int, endian: str) -> int:
+    if testMode != 1:
+        # TODO: test this
+        devmemFd = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
+        pageSize = resource.getpagesize()
+        mappedOffset = regAbsAddr & (pageSize - 1)
+        inPageOffset = regAbsAddr - mappedOffset
+
+        with mmap.mmap(
+                fileno=devmemFd,
+                length=pageSize * 2,
+                flags=mmap.MAP_SHARED,
+                prot=mmap.PROT_READ,
+                offset=mappedOffset) as mm:
+            mm.seek(inPageOffset)
+            bytesArray = mm.read(accessWidthInBit / 8)
+            ret = int.from_bytes(bytesArray, byteorder=endian, signed=False)
+
+        os.close(devmemFd)
+    else:
+        ret = (0b101 << 2) | (0b100 << 5)
+
+    return ret
 
 
 def getBitfieldShiftedVal(regVal: int, bitfieldRange: str) -> int:
@@ -163,25 +190,38 @@ def printBitfield(regVal: int, bitfieldRange: str, bitfieldDescription: object) 
         (bitfieldDescription['Name'], displayVal, description))
 
 
+def getRequiredIntValue(regSetDescription: dict, key: str) -> int:
+    if key not in regSetDescription:
+        raise ValueError(
+            f"Error: Missing {key} property")
+
+    ret = stringWithBaseToNum(regSetDescription[key])
+    del regSetDescription[key]
+
+    return ret
+
+
 def main() -> int:
 
     regSetDescription = testReg
 
-    if "BaseAddress" not in regSetDescription:
-        print("Error: Missing BaseAddress property!!")
-        return 1
+    baseAddr = getRequiredIntValue(regSetDescription, "BaseAddress")
+    accessWidthInBit = getRequiredIntValue(regSetDescription, "AccessWidth")
 
-    baseAddr = stringWithBaseToNum(regSetDescription["BaseAddress"])
-    del regSetDescription["BaseAddress"]
+    if "Endian" not in regSetDescription:
+        raise ValueError(
+            "Error: Missing Endian property")
+
+    endian = regSetDescription["Endian"]
+    del regSetDescription["Endian"]
 
     for regId, bitfieldDescriptionList in regSetDescription.items():
         regName, regOffset, regOffsetStr = parseRegId(regId)
-        # TODO: Selectively print column
         print(
-            f"Register {regName}(offset {regOffsetStr})")
+            f"{regName} Register(offset {regOffsetStr})")
         printResultTableHeader()
 
-        regVal = getRegValue(baseAddr + regOffset)
+        regVal = getRegValue(baseAddr + regOffset, accessWidthInBit, endian)
 
         for bitfieldRange, bitfieldDescription in bitfieldDescriptionList.items():
             printBitfield(regVal, bitfieldRange, bitfieldDescription)
