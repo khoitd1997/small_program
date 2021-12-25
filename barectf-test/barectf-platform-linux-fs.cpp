@@ -82,7 +82,7 @@ static void open_packet(void *const data) {
     struct barectf_platform_linux_fs_ctx *const platform_ctx =
         _FROM_VOID_PTR(struct barectf_platform_linux_fs_ctx, data);
 
-    barectf_default_open_packet(&platform_ctx->ctx);
+    barectf_default_open_packet(&platform_ctx->ctx, 1);
 }
 
 static void close_packet(void *const data) {

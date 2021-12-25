@@ -34,9 +34,7 @@ int main(const int argc, const char *const argv[]) {
      * Write a `one_integer` event record which contains the number of
      * command arguments.
      */
-    barectf_trace_one_integer(ctx, argc);
-
-    barectf_trace_one_integer(ctx, 125);
+    barectf_trace_sched_switch(ctx, "task_prev_name", 5, 2, 0, "task_next_name", 10, 3);
 
     /* Finalize (free) the platform context */
     barectf_platform_linux_fs_fini(platform_ctx);
