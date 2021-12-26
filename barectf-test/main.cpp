@@ -28,6 +28,23 @@ LttngTaskStruct task2 = {
     .prio = 3,
 };
 
+enum TaskState : int64_t {
+    TASK_RUNNING         = 0,
+    TASK_INTERRUPTIBLE   = 1,
+    TASK_UNINTERRUPTIBLE = 2,
+    TASK_STOPPED         = 4,
+    TASK_TRACED          = 8,
+    EXIT_DEAD            = 16,
+    EXIT_ZOMBIE          = 32,
+    TASK_PARKED          = 64,
+    TASK_DEAD            = 128,
+    TASK_WAKEKILL        = 256,
+    TASK_WAKING          = 512,
+    TASK_NOLOAD          = 1024,
+    TASK_NEW             = 2048,
+    TASK_STATE_MAX       = 4096,
+};
+
 int main(const int argc, const char *const argv[]) {
     BarectfKernelTrace kernelTrace1;
     BarectfKernelTrace kernelTrace2;
@@ -59,7 +76,7 @@ int main(const int argc, const char *const argv[]) {
                                                  task1.name.c_str(),
                                                  task1.tid,
                                                  task1.prio,
-                                                 0,
+                                                 TASK_RUNNING,
                                                  task2.name.c_str(),
                                                  task2.tid,
                                                  task2.prio);
@@ -72,43 +89,70 @@ int main(const int argc, const char *const argv[]) {
                                                  task2.name.c_str(),
                                                  task2.tid,
                                                  task2.prio,
-                                                 0,
+                                                 TASK_RUNNING,
                                                  task1.name.c_str(),
                                                  task1.tid,
                                                  task1.prio);
+
         sleep(1);
-        barectf_kernel_stream_trace_sched_wakeup(
-            kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, getCurrCpu());
+        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                                 task1.name.c_str(),
+                                                 task1.tid,
+                                                 task1.prio,
+                                                 TASK_INTERRUPTIBLE,
+                                                 task2.name.c_str(),
+                                                 task2.tid,
+                                                 task2.prio);
+
+        sleep(1);
+        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                                 task2.name.c_str(),
+                                                 task2.tid,
+                                                 task2.prio,
+                                                 TASK_UNINTERRUPTIBLE,
+                                                 task1.name.c_str(),
+                                                 task1.tid,
+                                                 task1.prio);
+
+        sleep(1);
+        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                                 task1.name.c_str(),
+                                                 task1.tid,
+                                                 task1.prio,
+                                                 TASK_STOPPED,
+                                                 task2.name.c_str(),
+                                                 task2.tid,
+                                                 task2.prio);
     }
 
     {
         BarectfTraceGuard          traceGuard{kernelTrace2};
         barectf_kernel_stream_ctx *kernelStreamPtr = kernelTrace2.getStreamCtxPtr();
 
-        // barectf_kernel_stream_trace_sched_wakeup(
-        //     kernelStreamPtr, task1.name.c_str(), task1.tid, task1.prio, 1);
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio,
-                                                 0,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio);
+        // // barectf_kernel_stream_trace_sched_wakeup(
+        // //     kernelStreamPtr, task1.name.c_str(), task1.tid, task1.prio, 1);
+        // sleep(1);
+        // barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+        //                                          task1.name.c_str(),
+        //                                          task1.tid,
+        //                                          task1.prio,
+        //                                          TASK_RUNNING,
+        //                                          task2.name.c_str(),
+        //                                          task2.tid,
+        //                                          task2.prio);
 
-        sleep(1);
-        // barectf_kernel_stream_trace_sched_wakeup(
-        //     kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, 1);
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio,
-                                                 0,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio);
+        // sleep(1);
+        // // barectf_kernel_stream_trace_sched_wakeup(
+        // //     kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, 1);
+        // sleep(1);
+        // barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+        //                                          task2.name.c_str(),
+        //                                          task2.tid,
+        //                                          task2.prio,
+        //                                          TASK_RUNNING,
+        //                                          task1.name.c_str(),
+        //                                          task1.tid,
+        //                                          task1.prio);
         sleep(1);
         barectf_kernel_stream_trace_sched_wakeup(
             kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, getCurrCpu());
