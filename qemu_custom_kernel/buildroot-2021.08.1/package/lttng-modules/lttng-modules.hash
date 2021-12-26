@@ -1,5 +1,5 @@
-# From https://lttng.org/files/lttng-modules/lttng-modules-2.11.0.tar.bz2.sha256
-sha256 98af92d8c2e00f4eb63bc637a6967103cf6997434493f36e7a535a491e4fad5f  lttng-modules-2.11.0.tar.bz2
+# From https://lttng.org/files/lttng-modules/lttng-modules-2.11.8.tar.bz2.sha256
+sha256 77d03546bbb7668b146f2261c646d503b7b601dc7072a5359d729d40f13598a1  lttng-modules-2.11.8.tar.bz2
 
 # Hash for license files
 sha256 36b6d3fa47916943fd5fec313c584784946047ec1337a78b440e5992cb595f89  lgpl-2.1.txt
