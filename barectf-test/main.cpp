@@ -17,16 +17,18 @@ struct LttngTaskStruct {
     int         prio;
 };
 
-LttngTaskStruct task1 = {
+const LttngTaskStruct task1 = {
     .name = "Task 1",
     .tid  = 6,
     .prio = 2,
 };
-LttngTaskStruct task2 = {
+const LttngTaskStruct task2 = {
     .name = "Task 2",
     .tid  = 12,
     .prio = 3,
 };
+constexpr int32_t irqNumber = 21;
+const std::string irqName   = "Test IRQ Name";
 
 enum TaskState : int64_t {
     TASK_RUNNING         = 0,
@@ -80,10 +82,12 @@ int main(const int argc, const char *const argv[]) {
                                                  task2.name.c_str(),
                                                  task2.tid,
                                                  task2.prio);
+        usleep(100000);
+        barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
+        usleep(1000);
+        barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
+        usleep(1000);
 
-        sleep(1);
-        // barectf_kernel_stream_trace_sched_wakeup(
-        //     kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, 1);
         sleep(1);
         barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
                                                  task2.name.c_str(),
@@ -93,6 +97,10 @@ int main(const int argc, const char *const argv[]) {
                                                  task1.name.c_str(),
                                                  task1.tid,
                                                  task1.prio);
+        usleep(100000);
+        barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
+        usleep(1000);
+        barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
 
         sleep(1);
         barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
