@@ -30,6 +30,8 @@
 
 #pragma once
 
+inline uint32_t getCurrCpu() { return 0; }
+
 class BarectfKernelTrace {
    public:
     bool init(const unsigned int bufSize,
@@ -49,8 +51,6 @@ class BarectfKernelTrace {
     static void     closePacketCallback(void *const data);
     static int      isBackendFullCallback(void *const data);
     static uint64_t getClockValueCallback(void *const data);
-
-    static constexpr uint32_t DEFAULT_PACKET_CPU_ID = 1;
 
     bool writeToFile();
 

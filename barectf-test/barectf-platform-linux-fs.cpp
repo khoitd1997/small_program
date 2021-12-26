@@ -64,7 +64,7 @@ void BarectfKernelTrace::finish() {
 }
 
 void BarectfKernelTrace::openPacket() {
-    barectf_kernel_stream_open_packet(&streamCtx, DEFAULT_PACKET_CPU_ID);
+    barectf_kernel_stream_open_packet(&streamCtx, getCurrCpu());
 }
 void BarectfKernelTrace::closePacket() {
     if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
