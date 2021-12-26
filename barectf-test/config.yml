@@ -62,10 +62,8 @@ trace:
         frequency: 1000000000
         $c-type: uint64_t
 
-    # One data stream type
     data-stream-types:
-      # Stream type named `default`
-      default:
+      kernel_stream:
         $is-default: true
 
         $default-clock-type-name: default
@@ -87,6 +85,16 @@ trace:
                 - _next_comm: string
                 - _next_tid: byte-packed-int32
                 - _next_prio: byte-packed-int32
+
+      function_stream:
+        $default-clock-type-name: default
+
+        event-record-types:
+          func_log:
+            payload-field-type:
+              class: structure
+              members:
+                - func_name: string
 
           # # Event record type named `one_string`
           # one_string:

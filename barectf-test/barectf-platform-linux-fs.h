@@ -1,6 +1,3 @@
-#ifndef _BARECTF_PLATFORM_LINUX_FS_H
-#define _BARECTF_PLATFORM_LINUX_FS_H
-
 /*
  * Copyright (c) 2015 EfficiOS Inc. and Linux Foundation
  * Copyright (c) 2015-2020 Philippe Proulx <pproulx@efficios.com>
@@ -26,27 +23,58 @@
  * SOFTWARE.
  */
 
-#include <stdint.h>
+#include <cstdint>
+#include <string_view>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "barectf.h"
 
-struct barectf_default_ctx;
-struct barectf_platform_linux_fs_ctx;
+#pragma once
 
-struct barectf_platform_linux_fs_ctx *barectf_platform_linux_fs_init(
-	unsigned int buf_size, const char *data_stream_file_path,
-	int simulate_full_backend, unsigned int full_backend_rand_max,
-	unsigned int full_backend_rand_lt);
+class BarectfKernelTrace {
+   public:
+    bool init(const unsigned int bufSize,
+              std::string_view   traceFilePath,
+              const int          simulateFullBackend,
+              const unsigned int fullBackendRandLt,
+              const unsigned int fullBackendRandMax);
+    void finish();
 
-void barectf_platform_linux_fs_fini(struct barectf_platform_linux_fs_ctx *ctx);
+    void openPacket();
+    void closePacket();
 
-struct barectf_default_ctx *barectf_platform_linux_fs_get_barectf_ctx(
-	struct barectf_platform_linux_fs_ctx *ctx);
+    inline barectf_kernel_stream_ctx *getStreamCtxPtr() { return &streamCtx; }
 
-#ifdef __cplusplus
-}
-#endif
+   private:
+    static void     openPacketCallback(void *const data);
+    static void     closePacketCallback(void *const data);
+    static int      isBackendFullCallback(void *const data);
+    static uint64_t getClockValueCallback(void *const data);
 
-#endif /* _BARECTF_PLATFORM_LINUX_FS_H */
+    static constexpr uint32_t DEFAULT_PACKET_CPU_ID = 1;
+
+    bool writeToFile();
+
+    barectf_kernel_stream_ctx streamCtx   = {};
+    FILE *                    traceFileFd = nullptr;
+    int                       simulateFullBackend;
+    unsigned int              fullBackendRandLt;
+    unsigned int              fullBackendRandMax;
+
+    uint8_t *traceBuffer = nullptr;
+
+    static constexpr barectf_platform_callbacks barectfCallback = {
+        .default_clock_get_value = getClockValueCallback,
+        .is_backend_full         = isBackendFullCallback,
+        .open_packet             = openPacketCallback,
+        .close_packet            = closePacketCallback,
+    };
+};
+
+class BarectfTraceGuard {
+   public:
+    inline BarectfTraceGuard(BarectfKernelTrace &trace) : myTrace{trace} { myTrace.openPacket(); }
+    inline ~BarectfTraceGuard() { myTrace.closePacket(); }
+
+   private:
+    BarectfKernelTrace &myTrace;
+};

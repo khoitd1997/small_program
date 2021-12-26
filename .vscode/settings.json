@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "*.inc": "bitbake",
+        "*.h": "cpp",
         "*.cu": "c",
         "*.tdd": "makefile",
         "*.cfg": "tcl",
@@ -47,8 +49,22 @@
         "variant": "cpp",
         "algorithm": "cpp",
         "iostream": "cpp",
-        "*.json": "jsonc"
+        "*.json": "jsonc",
+        "memory": "cpp",
+        "metadata": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "cmath": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "ctime": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "new": "cpp"
     },
     "C_Cpp.default.cppStandard": "c++17",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "cmake.sourceDirectory": "${workspaceFolder}/barectf-test"
 }

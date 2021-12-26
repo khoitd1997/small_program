@@ -1,4 +1,6 @@
-#include <stdio.h>
+#include <cassert>
+#include <cstdio>
+#include <iostream>
 
 /* Include the Linux FS platform header */
 #include "barectf-platform-linux-fs.h"
@@ -6,38 +8,31 @@
 /* Include the barectf public header */
 #include "barectf.h"
 
+constexpr size_t TRACE_BUFFER_SIZE_BYTE = 2048;
+
 int main(const int argc, const char *const argv[]) {
-    /* Platform context */
-    struct barectf_platform_linux_fs_ctx *platform_ctx;
+    BarectfKernelTrace kernelTrace;
+    bool               ret;
 
-    /* barectf context */
-    struct barectf_default_ctx *ctx;
-
-    int i;
-
-    /*
-     * Obtain a platform context.
-     *
-     * The platform is configured to write 512-byte packets to a data
-     * stream file within the `trace` directory.
-     */
-    platform_ctx = barectf_platform_linux_fs_init(512, "trace/stream", 0, 0, 0);
-    if (NULL == platform_ctx) {
-        printf("Failed to initialize platform ctx\n");
+    ret = kernelTrace.init(TRACE_BUFFER_SIZE_BYTE, "trace/stream", 0, 0, 0);
+    if (!ret) {
+        std::cout << "Failed to initialize kernelTrace" << std::endl;
         return -1;
     }
 
-    /* Obtain the barectf context from the platform context */
-    ctx = barectf_platform_linux_fs_get_barectf_ctx(platform_ctx);
+    barectf_kernel_stream_ctx *kernelStreamPtr = kernelTrace.getStreamCtxPtr();
 
-    /*
-     * Write a `one_integer` event record which contains the number of
-     * command arguments.
-     */
-    barectf_trace_sched_switch(ctx, "task_prev_name", 5, 2, 0, "task_next_name", 10, 3);
+    {
+        BarectfTraceGuard traceGuard{kernelTrace};
 
-    /* Finalize (free) the platform context */
-    barectf_platform_linux_fs_fini(platform_ctx);
+        barectf_kernel_stream_trace_sched_switch(
+            kernelStreamPtr, "task_prev_name", 6, 2, 0, "task_next_name", 12, 3);
+        barectf_kernel_stream_trace_sched_switch(
+            kernelStreamPtr, "task_next_name", 12, 3, 0, "task_prev_name", 6, 2);
+    }
+
+    std::cout << "Finishing kernel trace" << std::endl;
+    kernelTrace.finish();
 
     return 0;
 }

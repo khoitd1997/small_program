@@ -23,135 +23,89 @@
  * SOFTWARE.
  */
 
-#include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 #include "barectf-platform-linux-fs.h"
 #include "barectf.h"
 
-#ifdef __cplusplus
-#define _FROM_VOID_PTR(_type, _value) static_cast<_type *>(_value)
-#else
-#define _FROM_VOID_PTR(_type, _value) ((_type *)(_value))
-#endif
+bool BarectfKernelTrace::init(const unsigned int bufSize,
+                              std::string_view   traceFilePath,
+                              const int          simulateFullBackend,
+                              const unsigned int fullBackendRandLt,
+                              const unsigned int fullBackendRandMax) {
+    this->simulateFullBackend = simulateFullBackend;
+    this->fullBackendRandLt   = fullBackendRandLt;
+    this->fullBackendRandMax  = fullBackendRandMax;
 
-struct barectf_platform_linux_fs_ctx {
-    struct barectf_default_ctx ctx;
-    FILE *                     fh;
-    int                        simulate_full_backend;
-    unsigned int               full_backend_rand_lt;
-    unsigned int               full_backend_rand_max;
-};
+    traceBuffer = new uint8_t[bufSize];
+    if (nullptr == traceBuffer) { goto error; }
 
-static uint64_t get_clock(void *const data) {
+    traceFileFd = fopen(traceFilePath.data(), "wb");
+    if (nullptr == traceFileFd) { goto error; }
+
+    barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
+
+    return true;
+
+error:
+    delete[] traceBuffer;
+    return false;
+}
+void BarectfKernelTrace::finish() {
+    closePacket();
+
+    // fclose should already flush
+    fclose(traceFileFd);
+    delete[] barectf_packet_buf(&streamCtx);
+}
+
+void BarectfKernelTrace::openPacket() {
+    barectf_kernel_stream_open_packet(&streamCtx, DEFAULT_PACKET_CPU_ID);
+}
+void BarectfKernelTrace::closePacket() {
+    if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
+        barectf_kernel_stream_close_packet(&streamCtx);
+        writeToFile();
+    }
+}
+
+void BarectfKernelTrace::openPacketCallback(void *const data) {
+    BarectfKernelTrace *kernelTrace = static_cast<BarectfKernelTrace *>(data);
+    kernelTrace->openPacket();
+}
+void BarectfKernelTrace::closePacketCallback(void *const data) {
+    BarectfKernelTrace *kernelTrace = static_cast<BarectfKernelTrace *>(data);
+    kernelTrace->closePacket();
+}
+int BarectfKernelTrace::isBackendFullCallback(void *const data) {
+    BarectfKernelTrace *kernelTrace   = static_cast<BarectfKernelTrace *>(data);
+    int                 isBackendFull = 0;
+
+    if (kernelTrace->simulateFullBackend) {
+        if (rand() % kernelTrace->fullBackendRandMax < kernelTrace->fullBackendRandLt) {
+            isBackendFull = 1;
+            goto end;
+        }
+    }
+
+end:
+    return isBackendFull;
+}
+uint64_t BarectfKernelTrace::getClockValueCallback(void *const data) {
+    (void)(data);
     struct timespec ts;
 
     clock_gettime(CLOCK_REALTIME, &ts);
     return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 }
 
-static void write_packet(const struct barectf_platform_linux_fs_ctx *const platform_ctx) {
-    const size_t nmemb = fwrite(barectf_packet_buf(&platform_ctx->ctx),
-                                barectf_packet_buf_size(&platform_ctx->ctx),
-                                1,
-                                platform_ctx->fh);
+bool BarectfKernelTrace::writeToFile() {
+    const size_t nmemb =
+        fwrite(barectf_packet_buf(&streamCtx), barectf_packet_buf_size(&streamCtx), 1, traceFileFd);
 
-    assert(nmemb == 1);
-}
-
-static int is_backend_full(void *const data) {
-    int                                               is_backend_full = 0;
-    const struct barectf_platform_linux_fs_ctx *const platform_ctx =
-        _FROM_VOID_PTR(const struct barectf_platform_linux_fs_ctx, data);
-
-    if (platform_ctx->simulate_full_backend) {
-        if (rand() % platform_ctx->full_backend_rand_max < platform_ctx->full_backend_rand_lt) {
-            is_backend_full = 1;
-            goto end;
-        }
-    }
-
-end:
-    return is_backend_full;
-}
-
-static void open_packet(void *const data) {
-    struct barectf_platform_linux_fs_ctx *const platform_ctx =
-        _FROM_VOID_PTR(struct barectf_platform_linux_fs_ctx, data);
-
-    barectf_default_open_packet(&platform_ctx->ctx, 1);
-}
-
-static void close_packet(void *const data) {
-    struct barectf_platform_linux_fs_ctx *const platform_ctx =
-        _FROM_VOID_PTR(struct barectf_platform_linux_fs_ctx, data);
-
-    /* Close packet now */
-    barectf_default_close_packet(&platform_ctx->ctx);
-
-    /* Write packet to file */
-    write_packet(platform_ctx);
-}
-
-struct barectf_platform_linux_fs_ctx *barectf_platform_linux_fs_init(
-    const unsigned int buf_size,
-    const char *const  data_stream_file_path,
-    const int          simulate_full_backend,
-    const unsigned int full_backend_rand_lt,
-    const unsigned int full_backend_rand_max) {
-    uint8_t *                             buf = NULL;
-    struct barectf_platform_linux_fs_ctx *platform_ctx;
-    struct barectf_platform_callbacks     cbs;
-
-    cbs.default_clock_get_value = get_clock;
-    cbs.is_backend_full         = is_backend_full;
-    cbs.open_packet             = open_packet;
-    cbs.close_packet            = close_packet;
-    platform_ctx =
-        _FROM_VOID_PTR(struct barectf_platform_linux_fs_ctx, malloc(sizeof(*platform_ctx)));
-
-    if (!platform_ctx) { goto error; }
-
-    buf = _FROM_VOID_PTR(uint8_t, malloc(buf_size));
-
-    if (!buf) { goto error; }
-
-    platform_ctx->fh = fopen(data_stream_file_path, "wb");
-
-    if (!platform_ctx->fh) { goto error; }
-
-    platform_ctx->simulate_full_backend = simulate_full_backend;
-    platform_ctx->full_backend_rand_lt  = full_backend_rand_lt;
-    platform_ctx->full_backend_rand_max = full_backend_rand_max;
-    barectf_init(&platform_ctx->ctx, buf, buf_size, cbs, platform_ctx);
-    open_packet(platform_ctx);
-    goto end;
-
-error:
-    free(platform_ctx);
-    platform_ctx = NULL;
-    free(buf);
-
-end:
-    return platform_ctx;
-}
-
-void barectf_platform_linux_fs_fini(struct barectf_platform_linux_fs_ctx *const platform_ctx) {
-    if (barectf_packet_is_open(&platform_ctx->ctx) &&
-        !barectf_packet_is_empty(&platform_ctx->ctx)) {
-        printf("Closing packet\n");
-        close_packet(platform_ctx);
-    }
-
-    fclose(platform_ctx->fh);
-    free(barectf_packet_buf(&platform_ctx->ctx));
-    free(platform_ctx);
-}
-
-struct barectf_default_ctx *barectf_platform_linux_fs_get_barectf_ctx(
-    struct barectf_platform_linux_fs_ctx *const platform_ctx) {
-    return &platform_ctx->ctx;
+    return nmemb == 1;
 }
