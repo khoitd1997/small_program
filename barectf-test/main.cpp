@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <cassert>
 #include <cstdio>
 #include <iostream>
@@ -9,6 +10,23 @@
 #include "barectf.h"
 
 constexpr size_t TRACE_BUFFER_SIZE_BYTE = 2048;
+
+struct LttngTaskStruct {
+    std::string name;
+    int         tid;
+    int         prio;
+};
+
+LttngTaskStruct task1 = {
+    .name = "Task 1",
+    .tid  = 6,
+    .prio = 2,
+};
+LttngTaskStruct task2 = {
+    .name = "Task 2",
+    .tid  = 12,
+    .prio = 3,
+};
 
 int main(const int argc, const char *const argv[]) {
     BarectfKernelTrace kernelTrace;
@@ -22,13 +40,38 @@ int main(const int argc, const char *const argv[]) {
 
     barectf_kernel_stream_ctx *kernelStreamPtr = kernelTrace.getStreamCtxPtr();
 
+    // NOTE: sched_wakeup doesn't seem necessary to display a nice flow trace
+
     {
         BarectfTraceGuard traceGuard{kernelTrace};
 
-        barectf_kernel_stream_trace_sched_switch(
-            kernelStreamPtr, "task_prev_name", 6, 2, 0, "task_next_name", 12, 3);
-        barectf_kernel_stream_trace_sched_switch(
-            kernelStreamPtr, "task_next_name", 12, 3, 0, "task_prev_name", 6, 2);
+        // barectf_kernel_stream_trace_sched_wakeup(
+        //     kernelStreamPtr, task1.name.c_str(), task1.tid, task1.prio, 1);
+        sleep(1);
+        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                                 task1.name.c_str(),
+                                                 task1.tid,
+                                                 task1.prio,
+                                                 0,
+                                                 task2.name.c_str(),
+                                                 task2.tid,
+                                                 task2.prio);
+
+        sleep(1);
+        // barectf_kernel_stream_trace_sched_wakeup(
+        //     kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, 1);
+        sleep(1);
+        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                                 task2.name.c_str(),
+                                                 task2.tid,
+                                                 task2.prio,
+                                                 0,
+                                                 task1.name.c_str(),
+                                                 task1.tid,
+                                                 task1.prio);
+        sleep(1);
+        barectf_kernel_stream_trace_sched_wakeup(
+            kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, 1);
     }
 
     std::cout << "Finishing kernel trace" << std::endl;

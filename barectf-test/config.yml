@@ -86,6 +86,15 @@ trace:
                 - _next_tid: byte-packed-int32
                 - _next_prio: byte-packed-int32
 
+          sched_wakeup:
+            payload-field-type:
+              class: structure
+              members:
+                - _comm: string
+                - _tid: byte-packed-int32
+                - _prio: byte-packed-int32
+                - _target_cpu: byte-packed-int32
+
       function_stream:
         $default-clock-type-name: default
 
