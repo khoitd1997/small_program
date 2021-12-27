@@ -82,7 +82,7 @@ AuthorizedKeysFile	.ssh/authorized_keys
 #UsePAM no
 
 #AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AllowTcpForwarding yes
 #GatewayPorts no
 #X11Forwarding no
 #X11DisplayOffset 10
