@@ -38,7 +38,7 @@ inline uint32_t getCurrCpu() { return 0; }
 template <typename T>
 class BarectfBaseTrace {
    public:
-    T *getStreamCtxPtr() { return &streamCtx; }
+    T* getStreamCtxPtr() { return &streamCtx; }
 
     virtual void finish() {
         // fclose should already flush
@@ -47,7 +47,7 @@ class BarectfBaseTrace {
     }
 
    protected:
-    static uint64_t getClockValueCallback(void *const data) {
+    static uint64_t getClockValueCallback(void* const data) {
         (void)(data);
         struct timespec ts;
 
@@ -62,8 +62,8 @@ class BarectfBaseTrace {
         return nmemb == 1;
     }
 
-    FILE *   traceFileFd = nullptr;
-    uint8_t *traceBuffer = nullptr;
+    FILE*    traceFileFd = nullptr;
+    uint8_t* traceBuffer = nullptr;
 
     T streamCtx = {};
 };
@@ -81,9 +81,9 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
     void closePacket();
 
    private:
-    static void openPacketCallback(void *const data);
-    static void closePacketCallback(void *const data);
-    static int  isBackendFullCallback(void *const data);
+    static void openPacketCallback(void* const data);
+    static void closePacketCallback(void* const data);
+    static int  isBackendFullCallback(void* const data);
 
     int          simulateFullBackend;
     unsigned int fullBackendRandLt;
@@ -96,12 +96,42 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
         .close_packet            = closePacketCallback,
     };
 };
-
-class BarectfTraceGuard {
+class BarectfKernelTraceGuard {
    public:
-    inline BarectfTraceGuard(BarectfKernelTrace &trace) : myTrace{trace} { myTrace.openPacket(); }
-    inline ~BarectfTraceGuard() { myTrace.closePacket(); }
+    inline BarectfKernelTraceGuard(BarectfKernelTrace& trace) : myTrace{trace} {
+        myTrace.openPacket();
+    }
+    inline ~BarectfKernelTraceGuard() { myTrace.closePacket(); }
 
    private:
-    BarectfKernelTrace &myTrace;
+    BarectfKernelTrace& myTrace;
+};
+
+class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx> {
+   public:
+    bool init(const unsigned int bufSize, std::string_view traceFilePath);
+    void finish();
+
+    void openPacket();
+    void closePacket();
+
+   private:
+    static void openPacketCallback(void* const data);
+    static void closePacketCallback(void* const data);
+    static int  isBackendFullCallback(void* const data);
+
+    static constexpr barectf_platform_callbacks barectfCallback = {
+        .default_clock_get_value = getClockValueCallback,
+        .is_backend_full         = isBackendFullCallback,
+        .open_packet             = openPacketCallback,
+        .close_packet            = closePacketCallback,
+    };
+};
+class BarectfUserTraceGuard {
+   public:
+    inline BarectfUserTraceGuard(BarectfUserTrace& trace) : myTrace{trace} { myTrace.openPacket(); }
+    inline ~BarectfUserTraceGuard() { myTrace.closePacket(); }
+
+   private:
+    BarectfUserTrace& myTrace;
 };

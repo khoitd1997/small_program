@@ -5,3 +5,4 @@ add_executable(test_cmake_app_exe main.cpp)
 target_include_directories(test_cmake_app_exe
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(test_cmake_app_exe PUBLIC -g -finstrument-functions)
+target_link_libraries(test_cmake_app_exe PUBLIC pthread)

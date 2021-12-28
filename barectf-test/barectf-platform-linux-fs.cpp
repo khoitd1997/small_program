@@ -93,3 +93,41 @@ int BarectfKernelTrace::isBackendFullCallback(void *const data) {
 end:
     return isBackendFull;
 }
+
+bool BarectfUserTrace::init(const unsigned int bufSize, std::string_view traceFilePath) {
+    traceBuffer = new uint8_t[bufSize];
+    if (nullptr == traceBuffer) { goto error; }
+
+    traceFileFd = fopen(traceFilePath.data(), "wb");
+    if (nullptr == traceFileFd) { goto error; }
+
+    barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
+
+    return true;
+
+error:
+    delete[] traceBuffer;
+    return false;
+}
+void BarectfUserTrace::finish() {
+    closePacket();
+
+    BarectfBaseTrace::finish();
+}
+void BarectfUserTrace::openPacket() { barectf_user_stream_open_packet(&streamCtx, getCurrCpu()); }
+void BarectfUserTrace::closePacket() {
+    if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
+        barectf_user_stream_close_packet(&streamCtx);
+        writeToFile();
+    }
+}
+
+void BarectfUserTrace::openPacketCallback(void *const data) {
+    BarectfUserTrace *userTrace = static_cast<BarectfUserTrace *>(data);
+    userTrace->openPacket();
+}
+void BarectfUserTrace::closePacketCallback(void *const data) {
+    BarectfUserTrace *userTrace = static_cast<BarectfUserTrace *>(data);
+    userTrace->closePacket();
+}
+int BarectfUserTrace::isBackendFullCallback(void *const data) { return 0; }

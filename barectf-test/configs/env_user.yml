@@ -1,0 +1,12 @@
+type: {}
+environment:
+  domain: "ust"
+  tracer_name: "lttng-ust"
+  tracer_major: 2
+  tracer_minor: 13
+  tracer_buffering_scheme: "uid"
+  tracer_buffering_id: 0
+  architecture_bit_width: 64
+  trace_name: "user_trace_session"
+
+# something: {}

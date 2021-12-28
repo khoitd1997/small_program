@@ -1,0 +1,13 @@
+type: {}
+environment:
+  domain: "kernel"
+  sysname: "Linux"
+  # kernel_release: "5.11.0-41-generic"
+  # kernel_version: "#45~20.04.1-Ubuntu SMP Wed Nov 10 10:20:10 UTC 2021"
+  tracer_name: "lttng-modules"
+  tracer_major: 2
+  tracer_minor: 12
+  tracer_patchlevel: 5
+  trace_buffering_scheme: "global"
+  trace_name: "kernel_trace_session"
+  product_uuid: "97c28570-2673-0000-0000-000000000000"
