@@ -24,6 +24,9 @@
  */
 
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <string_view>
 
 #include "barectf.h"
@@ -32,7 +35,40 @@
 
 inline uint32_t getCurrCpu() { return 0; }
 
-class BarectfKernelTrace {
+template <typename T>
+class BarectfBaseTrace {
+   public:
+    T *getStreamCtxPtr() { return &streamCtx; }
+
+    virtual void finish() {
+        // fclose should already flush
+        fclose(traceFileFd);
+        delete[] barectf_packet_buf(&streamCtx);
+    }
+
+   protected:
+    static uint64_t getClockValueCallback(void *const data) {
+        (void)(data);
+        struct timespec ts;
+
+        clock_gettime(CLOCK_REALTIME, &ts);
+        return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+    }
+
+    bool writeToFile() {
+        const size_t nmemb = fwrite(
+            barectf_packet_buf(&streamCtx), barectf_packet_buf_size(&streamCtx), 1, traceFileFd);
+
+        return nmemb == 1;
+    }
+
+    FILE *   traceFileFd = nullptr;
+    uint8_t *traceBuffer = nullptr;
+
+    T streamCtx = {};
+};
+
+class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream_ctx> {
    public:
     bool init(const unsigned int bufSize,
               std::string_view   traceFilePath,
@@ -44,23 +80,14 @@ class BarectfKernelTrace {
     void openPacket();
     void closePacket();
 
-    inline barectf_kernel_stream_ctx *getStreamCtxPtr() { return &streamCtx; }
-
    private:
-    static void     openPacketCallback(void *const data);
-    static void     closePacketCallback(void *const data);
-    static int      isBackendFullCallback(void *const data);
-    static uint64_t getClockValueCallback(void *const data);
+    static void openPacketCallback(void *const data);
+    static void closePacketCallback(void *const data);
+    static int  isBackendFullCallback(void *const data);
 
-    bool writeToFile();
-
-    barectf_kernel_stream_ctx streamCtx   = {};
-    FILE *                    traceFileFd = nullptr;
-    int                       simulateFullBackend;
-    unsigned int              fullBackendRandLt;
-    unsigned int              fullBackendRandMax;
-
-    uint8_t *traceBuffer = nullptr;
+    int          simulateFullBackend;
+    unsigned int fullBackendRandLt;
+    unsigned int fullBackendRandMax;
 
     static constexpr barectf_platform_callbacks barectfCallback = {
         .default_clock_get_value = getClockValueCallback,

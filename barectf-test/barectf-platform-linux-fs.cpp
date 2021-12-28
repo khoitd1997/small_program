@@ -58,9 +58,7 @@ error:
 void BarectfKernelTrace::finish() {
     closePacket();
 
-    // fclose should already flush
-    fclose(traceFileFd);
-    delete[] barectf_packet_buf(&streamCtx);
+    BarectfBaseTrace::finish();
 }
 
 void BarectfKernelTrace::openPacket() {
@@ -94,18 +92,4 @@ int BarectfKernelTrace::isBackendFullCallback(void *const data) {
 
 end:
     return isBackendFull;
-}
-uint64_t BarectfKernelTrace::getClockValueCallback(void *const data) {
-    (void)(data);
-    struct timespec ts;
-
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
-}
-
-bool BarectfKernelTrace::writeToFile() {
-    const size_t nmemb =
-        fwrite(barectf_packet_buf(&streamCtx), barectf_packet_buf_size(&streamCtx), 1, traceFileFd);
-
-    return nmemb == 1;
 }
