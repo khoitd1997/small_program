@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <atomic>
 #include <iostream>
 
 #include "FreeRTOS.h"
@@ -211,11 +212,23 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 }
 }
 
+std::atomic_int totalTaskCount = 0;
+
 void basicTask(void* pvParameters) {
     console_print("I am task %s\n", pcTaskGetName(nullptr));
+    int counter = 0;
     for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(5));
+        // vTaskDelay(pdMS_TO_TICKS(5));
+        ++counter;
+        if (counter >= 10) { break; }
     }
+
+    --totalTaskCount;
+    if (totalTaskCount == 0) {
+        console_print("All task is done, exitting\n");
+        std::exit(0);
+    }
+    vTaskDelete(nullptr);
 }
 
 int main(void) {
@@ -226,14 +239,17 @@ int main(void) {
         std::cout << "Failed to create task_1" << std::endl;
         return -1;
     }
+    ++totalTaskCount;
     if (pdPASS != xTaskCreate(basicTask, "task_2", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_2" << std::endl;
         return -1;
     }
+    ++totalTaskCount;
     if (pdPASS != xTaskCreate(basicTask, "task_3", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_3" << std::endl;
         return -1;
     }
+    ++totalTaskCount;
 
     console_print("Done with main\n");
 

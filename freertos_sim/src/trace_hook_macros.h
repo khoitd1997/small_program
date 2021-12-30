@@ -35,7 +35,8 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "trace_hook.h"
+void taskSwitchedInHook(char* taskName);
+void taskSwitchedOutHook(char* taskName);
 
 #define STM_BASE 0xf8000000
 

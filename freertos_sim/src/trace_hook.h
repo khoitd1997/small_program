@@ -1,5 +1,7 @@
 #pragma once
 
+#include "trace_hook_macros.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,9 +78,6 @@ typedef enum {
     FREERTOS_TASK_NOTIFY_FROM_ISR,
     FREERTOS_TASK_NOTIFY_GIVE_FROM_ISR,
 } stm_trace_events;
-
-void taskSwitchedInHook(char* taskName);
-void taskSwitchedOutHook(char* taskName);
 
 #ifdef __cplusplus
 }
