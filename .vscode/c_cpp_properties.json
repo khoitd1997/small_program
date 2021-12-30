@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Barectf_Lib",
             "includePath": [
                 "${default}",
                 "barectf-test/barectf_generated_src"
@@ -9,7 +9,16 @@
             "defines": [],
             "compilerPath": "/usr/bin/clang",
             "cppStandard": "c++17",
+            "cStandard": "c99",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        },
+        {
+            "name": "FreeRTOS_Posix",
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cppStandard": "c++17",
+            "cStandard": "c99",
+            "compileCommands": "${workspaceFolder}/freertos_sim/build/compile_commands.json"
         }
     ],
     "version": 4

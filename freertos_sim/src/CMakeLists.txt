@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(freertos_sim C CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(FREERTOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS")
 set(KERNEL_DIR "${FREERTOS_DIR}/Source")
 set(FREERTOS_PLUS_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS-Plus")
 set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(app_source ${APP_DIR}/main.c ${APP_DIR}/main_full.c ${APP_DIR}/console.c)
+set(app_source ${APP_DIR}/main.cpp ${APP_DIR}/console.cpp)
 file(GLOB kernel_source ${FREERTOS_DIR}/Source/*.c)
 
 set(demo_lib_src
