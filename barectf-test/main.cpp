@@ -62,134 +62,79 @@ enum TaskState : int64_t {
 const std::string kernelTraceDir = "kernel_trace";
 const std::string userTraceDir   = "user_trace";
 
-int main(const int argc, const char* const argv[]) {
-    BarectfKernelTrace kernelTrace1;
-    // BarectfKernelTrace kernelTrace2;
-    BarectfUserTrace userTrace;
-    bool             ret;
+BarectfKernelTrace kernelTrace1;
+// BarectfKernelTrace kernelTrace2;
+BarectfUserTrace userTrace;
 
-    ret = kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream1", 0, 0, 0);
-    if (!ret) {
-        std::cout << "Failed to initialize kernelTrace1" << std::endl;
-        return -1;
-    }
-    // ret = kernelTrace2.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream2", 0, 0, 0);
-    // if (!ret) {
-    //     std::cout << "Failed to initialize kernelTrace2" << std::endl;
-    //     return -1;
-    // }
-
-    ret = userTrace.init(TRACE_BUFFER_SIZE_BYTE, userTraceDir + "/user_stream");
-    if (!ret) {
-        std::cout << "Failed to initialize userTrace" << std::endl;
-        return -1;
-    }
-
+static void doKernelTrace1() {
     // NOTE: sched_wakeup doesn't seem necessary to display a nice flow trace
     // multiple stream get displayed into one on trace compass
     // this makes it easy to have one stream per task
 
-    {
-        BarectfKernelTraceGuard    traceGuard{kernelTrace1};
-        barectf_kernel_stream_ctx* kernelStreamPtr = kernelTrace1.getStreamCtxPtr();
+    BarectfKernelTraceGuard    traceGuard{kernelTrace1};
+    barectf_kernel_stream_ctx* kernelStreamPtr = kernelTrace1.getStreamCtxPtr();
 
-        // barectf_kernel_stream_trace_sched_wakeup(
-        //     kernelStreamPtr, task1.name.c_str(), task1.tid, task1.prio, 1);
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio,
-                                                 TASK_RUNNING,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio);
-        usleep(100000);
-        barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
-        usleep(1000);
-        barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
+    // barectf_kernel_stream_trace_sched_wakeup(
+    //     kernelStreamPtr, task1.name.c_str(), task1.tid, task1.prio, 1);
+    sleep(1);
+    barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                             task1.name.c_str(),
+                                             task1.tid,
+                                             task1.prio,
+                                             TASK_RUNNING,
+                                             task2.name.c_str(),
+                                             task2.tid,
+                                             task2.prio);
+    usleep(100000);
+    barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
+    usleep(1000);
+    barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
 
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio,
-                                                 TASK_RUNNING,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio);
-        usleep(100000);
-        barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
-        usleep(1000);
-        barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
+    sleep(1);
+    barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                             task2.name.c_str(),
+                                             task2.tid,
+                                             task2.prio,
+                                             TASK_RUNNING,
+                                             task1.name.c_str(),
+                                             task1.tid,
+                                             task1.prio);
+    usleep(100000);
+    barectf_kernel_stream_trace_irq_handler_entry(kernelStreamPtr, irqNumber, irqName.c_str());
+    usleep(1000);
+    barectf_kernel_stream_trace_irq_handler_exit(kernelStreamPtr, irqNumber, 2);
 
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio,
-                                                 TASK_INTERRUPTIBLE,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio);
+    sleep(1);
+    barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                             task1.name.c_str(),
+                                             task1.tid,
+                                             task1.prio,
+                                             TASK_INTERRUPTIBLE,
+                                             task2.name.c_str(),
+                                             task2.tid,
+                                             task2.prio);
 
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio,
-                                                 TASK_UNINTERRUPTIBLE,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio);
+    sleep(1);
+    barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                             task2.name.c_str(),
+                                             task2.tid,
+                                             task2.prio,
+                                             TASK_UNINTERRUPTIBLE,
+                                             task1.name.c_str(),
+                                             task1.tid,
+                                             task1.prio);
 
-        sleep(1);
-        barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
-                                                 task1.name.c_str(),
-                                                 task1.tid,
-                                                 task1.prio,
-                                                 TASK_STOPPED,
-                                                 task2.name.c_str(),
-                                                 task2.tid,
-                                                 task2.prio);
-    }
-
-    {
-        BarectfUserTraceGuard    traceGuard{userTrace};
-        barectf_user_stream_ctx* userStreamPtr = userTrace.getStreamCtxPtr();
-
-        barectf_user_stream_trace_lttng_ust_statedump_start(
-            userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
-        barectf_user_stream_trace_lttng_ust_statedump_procname(userStreamPtr,
-                                                               userThreadVtid,
-                                                               userThreadPid,
-                                                               userThreadName.c_str(),
-                                                               userThreadName.c_str());
-        barectf_user_stream_trace_lttng_ust_statedump_bin_info(userStreamPtr,
-                                                               userThreadVtid,
-                                                               userThreadPid,
-                                                               userThreadName.c_str(),
-                                                               0x7f190d3bd000,
-                                                               137528,
-                                                               "/lib/nowhere.so",
-                                                               false,
-                                                               false,
-                                                               false);
-        barectf_user_stream_trace_lttng_ust_statedump_end(
-            userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
-
-        barectf_user_stream_trace_lttng_ust_libc_calloc(
-            userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
-        barectf_user_stream_trace_lttng_ust_libc_calloc(
-            userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
-        barectf_user_stream_trace_lttng_ust_libc_calloc(
-            userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
-        // barectf_user_stream_trace_lttng_ust_libc_free(
-        //     userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 0x192fe40);
-    }
-
-    // {barectf_user_stream_trace_lttng_ust_statedump_start()}
-
+    sleep(1);
+    barectf_kernel_stream_trace_sched_switch(kernelStreamPtr,
+                                             task1.name.c_str(),
+                                             task1.tid,
+                                             task1.prio,
+                                             TASK_STOPPED,
+                                             task2.name.c_str(),
+                                             task2.tid,
+                                             task2.prio);
+}
+void doKernelTrace2() {
     // {
     //     BarectfKernelTraceGuard    traceGuard{kernelTrace2};
     //     barectf_kernel_stream_ctx *kernelStreamPtr = kernelTrace2.getStreamCtxPtr();
@@ -222,6 +167,64 @@ int main(const int argc, const char* const argv[]) {
     //     barectf_kernel_stream_trace_sched_wakeup(
     //         kernelStreamPtr, task2.name.c_str(), task2.tid, task2.prio, getCurrCpu());
     // }
+}
+
+void doUserTrace() {
+    BarectfUserTraceGuard    traceGuard{userTrace};
+    barectf_user_stream_ctx* userStreamPtr = userTrace.getStreamCtxPtr();
+
+    barectf_user_stream_trace_lttng_ust_statedump_start(
+        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
+    barectf_user_stream_trace_lttng_ust_statedump_procname(userStreamPtr,
+                                                           userThreadVtid,
+                                                           userThreadPid,
+                                                           userThreadName.c_str(),
+                                                           userThreadName.c_str());
+    barectf_user_stream_trace_lttng_ust_statedump_bin_info(userStreamPtr,
+                                                           userThreadVtid,
+                                                           userThreadPid,
+                                                           userThreadName.c_str(),
+                                                           0x7f190d3bd000,
+                                                           137528,
+                                                           "/lib/nowhere.so",
+                                                           false,
+                                                           false,
+                                                           false);
+    barectf_user_stream_trace_lttng_ust_statedump_end(
+        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
+
+    barectf_user_stream_trace_lttng_ust_libc_calloc(
+        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
+    barectf_user_stream_trace_lttng_ust_libc_calloc(
+        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
+    barectf_user_stream_trace_lttng_ust_libc_calloc(
+        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
+    //     userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 0x192fe40);
+}
+
+int main(const int argc, const char* const argv[]) {
+    bool ret;
+
+    ret = kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream1", 0, 0, 0);
+    if (!ret) {
+        std::cout << "Failed to initialize kernelTrace1" << std::endl;
+        return -1;
+    }
+    // ret = kernelTrace2.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream2", 0, 0, 0);
+    // if (!ret) {
+    //     std::cout << "Failed to initialize kernelTrace2" << std::endl;
+    //     return -1;
+    // }
+
+    ret = userTrace.init(TRACE_BUFFER_SIZE_BYTE, userTraceDir + "/user_stream");
+    if (!ret) {
+        std::cout << "Failed to initialize userTrace" << std::endl;
+        return -1;
+    }
+
+    doKernelTrace1();
+
+    doUserTrace();
 
     std::cout << "Finishing kernel trace" << std::endl;
     kernelTrace1.finish();
