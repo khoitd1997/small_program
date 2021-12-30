@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <iostream>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -210,10 +211,38 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 }
 }
 
+void basicTask(void* pvParameters) {
+    console_print("I am task %s\n", pcTaskGetName(nullptr));
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+}
+
 int main(void) {
     console_init();
     console_print("Starting FreeRTOS Posix\n");
-    console_print("Done executing FreeRTOS Posix\n");
 
+    if (pdPASS != xTaskCreate(basicTask, "task_1", 4048, nullptr, 2, nullptr)) {
+        std::cout << "Failed to create task_1" << std::endl;
+        return -1;
+    }
+    if (pdPASS != xTaskCreate(basicTask, "task_2", 4048, nullptr, 2, nullptr)) {
+        std::cout << "Failed to create task_2" << std::endl;
+        return -1;
+    }
+    if (pdPASS != xTaskCreate(basicTask, "task_3", 4048, nullptr, 2, nullptr)) {
+        std::cout << "Failed to create task_3" << std::endl;
+        return -1;
+    }
+
+    console_print("Done with main\n");
+
+    /* Start the scheduler itself. */
+    vTaskStartScheduler();
+
+    console_print("Failed to start scheduler!!!\n");
+
+    /* Should never get here unless there was not enough heap space to create
+     * the idle and other system tasks. */
     return 0;
 }

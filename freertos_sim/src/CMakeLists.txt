@@ -13,7 +13,8 @@ set(FREERTOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS")
 set(KERNEL_DIR "${FREERTOS_DIR}/Source")
 set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-set(app_source ${APP_DIR}/main.cpp ${APP_DIR}/console.cpp)
+set(app_source ${APP_DIR}/main.cpp ${APP_DIR}/console.cpp
+               ${APP_DIR}/trace_hook.cpp)
 file(GLOB kernel_source ${FREERTOS_DIR}/Source/*.c)
 
 set(demo_lib_src
