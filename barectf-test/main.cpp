@@ -3,8 +3,9 @@
 #include <cstdio>
 #include <iostream>
 
-/* Include the Linux FS platform header */
 #include "barectf-platform-linux-fs.h"
+#include "barectf_function_instrument.h"
+#include "barectf_utils.h"
 
 /* Include the barectf public header */
 #include "barectf.h"
@@ -172,21 +173,27 @@ void doKernelTrace2() {
 void doUserTrace() {
     BarectfUserTraceGuard    traceGuard{userTrace};
     barectf_user_stream_ctx* userStreamPtr = userTrace.getStreamCtxPtr();
+    BarectfThreadInfo        threadInfo;
+    getCurrThreadInfo(threadInfo);
 
     userTrace.doBasicStatedump();
 
     barectf_user_stream_trace_lttng_ust_libc_calloc(
-        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
+        userStreamPtr, threadInfo.tid, threadInfo.pid, threadInfo.name, 24, 1, 0x192fe40);
     barectf_user_stream_trace_lttng_ust_libc_calloc(
-        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
+        userStreamPtr, threadInfo.tid, threadInfo.pid, threadInfo.name, 24, 1, 0x192fe40);
     barectf_user_stream_trace_lttng_ust_libc_calloc(
-        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);
-    //     userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 0x192fe40);
+        userStreamPtr, threadInfo.tid, threadInfo.pid, threadInfo.name, 24, 1, 0x192fe40);
+    //     userStreamPtr, threadInfo.tid, threadInfo.pid, threadInfo.name, 0x192fe40);
 }
+
+static BarectfFunctionInstrument barectfFunctionInstrument(
+    TRACE_BUFFER_SIZE_BYTE, "user_trace/user_stream_function_instrument");
 
 int main(const int argc, const char* const argv[]) {
     bool ret;
 
+    std::cout << "Initting kernelTrace1" << std::endl;
     ret = kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream1", 0, 0, 0);
     if (!ret) {
         std::cout << "Failed to initialize kernelTrace1" << std::endl;
@@ -198,20 +205,25 @@ int main(const int argc, const char* const argv[]) {
     //     return -1;
     // }
 
+    std::cout << "Initting userTrace" << std::endl;
     ret = userTrace.init(TRACE_BUFFER_SIZE_BYTE, userTraceDir + "/user_stream");
     if (!ret) {
         std::cout << "Failed to initialize userTrace" << std::endl;
         return -1;
     }
 
+    std::cout << "doing kernelTrace1" << std::endl;
     doKernelTrace1();
 
+    std::cout << "doing userTrace" << std::endl;
     doUserTrace();
 
     std::cout << "Finishing kernel trace" << std::endl;
     kernelTrace1.finish();
     // kernelTrace2.finish();
     userTrace.finish();
+
+    barectfFunctionInstrument.finish();
 
     return 0;
 }

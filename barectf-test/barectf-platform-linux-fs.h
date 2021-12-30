@@ -23,10 +23,12 @@
  * SOFTWARE.
  */
 
+#include <link.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <mutex>
 #include <string_view>
 
 #include "barectf.h"
@@ -35,19 +37,27 @@
 
 inline uint32_t getCurrCpu() { return 0; }
 
+// NOTE: Due to the nature of templates all functions in this class need to
+// be marked with __attribute__((no_instrument_function))
+// this is because these functions are inline and also used in function
+// entry and exit callback so they can cause an infinite recursive loop
+// other non-inline function doesn't need it because they are already
+// compiled with no instrument options but inline functions can still be
+// instrumented if the caller app has instrumentation turned on
 template <typename T>
 class BarectfBaseTrace {
    public:
-    T* getStreamCtxPtr() { return &streamCtx; }
+    T* getStreamCtxPtr() __attribute__((no_instrument_function)) { return &streamCtx; }
 
-    virtual void finish() {
+    virtual void finish() __attribute__((no_instrument_function)) {
         // fclose should already flush
         fclose(traceFileFd);
         delete[] barectf_packet_buf(&streamCtx);
     }
 
    protected:
-    static uint64_t getClockValueCallback(void* const data) {
+    static uint64_t getClockValueCallback(void* const data)
+        __attribute__((no_instrument_function)) {
         (void)(data);
         struct timespec ts;
 
@@ -55,7 +65,7 @@ class BarectfBaseTrace {
         return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
     }
 
-    bool writeToFile() {
+    bool writeToFile() __attribute__((no_instrument_function)) {
         const size_t nmemb = fwrite(
             barectf_packet_buf(&streamCtx), barectf_packet_buf_size(&streamCtx), 1, traceFileFd);
 
@@ -123,10 +133,19 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
     // statedump packets for that
     void doBasicStatedump();
 
+    bool initialized = false;
+
    private:
     static void openPacketCallback(void* const data);
     static void closePacketCallback(void* const data);
     static int  isBackendFullCallback(void* const data);
+
+    static int         dlIterateCallback(dl_phdr_info* info, size_t size, void* data);
+    static std::string getCurrExePath();
+
+    // TODO: To be replaced when moved to another OS
+    static std::mutex statedumpMutex;
+    static bool       isStatedumpDone;
 
     static constexpr barectf_platform_callbacks barectfCallback = {
         .default_clock_get_value = getClockValueCallback,

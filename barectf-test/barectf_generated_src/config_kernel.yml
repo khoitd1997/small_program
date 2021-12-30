@@ -230,11 +230,15 @@ trace:
                 - _size: byte-packed-uint64
                 - _result: byte-packed-int32
 
-          # # Event record type named `one_string`
-          # one_string:
-          #   payload-field-type:
-          #     class: structure
-          #     members:
-          #       # One payload member: a string field type
-          #       # (`const char *` C type)
-          #       - the_string: string
+          lttng_ust_cyg_profile_func_entry:
+            payload-field-type:
+              class: structure
+              members:
+                - _addr: address_type
+                - _call_site: address_type
+          lttng_ust_cyg_profile_func_exit:
+            payload-field-type:
+              class: structure
+              members:
+                - _addr: address_type
+                - _call_site: address_type

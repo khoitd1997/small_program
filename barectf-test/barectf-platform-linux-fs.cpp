@@ -30,11 +30,16 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
 #include "barectf-platform-linux-fs.h"
 #include "barectf.h"
+#include "barectf_utils.h"
+
+std::mutex BarectfUserTrace::statedumpMutex;
+bool       BarectfUserTrace::isStatedumpDone = false;
 
 bool BarectfKernelTrace::init(const unsigned int bufSize,
                               std::string_view   traceFilePath,
@@ -106,6 +111,7 @@ bool BarectfUserTrace::init(const unsigned int bufSize, std::string_view traceFi
     if (nullptr == traceFileFd) { goto error; }
 
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
+    initialized = true;
 
     return true;
 
@@ -136,30 +142,64 @@ void BarectfUserTrace::closePacketCallback(void* const data) {
 }
 int BarectfUserTrace::isBackendFullCallback(void* const data) { return 0; }
 
-void BarectfUserTrace::doBasicStatedump() {
-    // TODO: In the future we will need to get these info differently
-    // for different OS
-    char          threadName[50];
-    const int32_t threadTid = static_cast<int32_t>(gettid());
-    const int32_t threadPid = static_cast<int32_t>(getpid());
-    if (0 != pthread_getname_np(pthread_self(), threadName, std::size(threadName))) {
-        throw std::runtime_error("Failed to get thread name");
+int BarectfUserTrace::dlIterateCallback(dl_phdr_info* info, size_t size, void* data) {
+    BarectfUserTrace* userTrace = static_cast<BarectfUserTrace*>(data);
+    BarectfThreadInfo threadInfo;
+    getCurrThreadInfo(threadInfo);
+    std::string objName = info->dlpi_name;
+    if (objName.empty()) { objName = getCurrExePath(); }
+
+    std::cout << "Name: " << info->dlpi_name << std::endl;
+    std::cout << std::hex << "Base address: 0x" << info->dlpi_addr << std::endl;
+    size_t objMemsz = 0;
+    for (auto j = 0; j < info->dlpi_phnum; j++) {
+        objMemsz += info->dlpi_phdr[j].p_memsz;
+        printf("\t\t header %2d: address=%10p\n",
+               j,
+               (void*)(info->dlpi_addr + info->dlpi_phdr[j].p_vaddr));
     }
+    std::cout << std::hex << "Size: 0x" << objMemsz << std::endl;
+    std::cout << std::endl;
+
+    barectf_user_stream_trace_lttng_ust_statedump_bin_info(userTrace->getStreamCtxPtr(),
+                                                           threadInfo.tid,
+                                                           threadInfo.pid,
+                                                           threadInfo.name,
+                                                           (uintptr_t)(info->dlpi_addr),
+                                                           objMemsz,
+                                                           objName.c_str(),
+                                                           true,
+                                                           false,
+                                                           false);
+
+    return 0;
+}
+std::string BarectfUserTrace::getCurrExePath() {
+    // readlink doesn't add null terminator so we have to do it ourselves
+    char currExeFilePath[100] = {0};
+    if (readlink("/proc/self/exe", currExeFilePath, std::size(currExeFilePath) - 1) < 0) {
+        throw std::runtime_error("Failed to read /proc/self/exe");
+    }
+    return currExeFilePath;
+}
+void BarectfUserTrace::doBasicStatedump() {
+    // we only want one statedump ever, so make sure only one guy ever does it
+    std::scoped_lock lock{statedumpMutex};
+
+    if (isStatedumpDone) { return; }
+
+    BarectfThreadInfo threadInfo;
+    getCurrThreadInfo(threadInfo);
 
     barectf_user_stream_trace_lttng_ust_statedump_start(
-        &streamCtx, threadTid, threadPid, threadName);
+        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name);
     barectf_user_stream_trace_lttng_ust_statedump_procname(
-        &streamCtx, threadTid, threadPid, threadName, threadName);
-    // TODO: Adjust this for static apps that doesn't use any dynamic library
-    // barectf_user_stream_trace_lttng_ust_statedump_bin_info(&streamCtx,
-    //                                                        threadTid,
-    //                                                        threadPid,
-    //                                                        threadName,
-    //                                                        0x7f190d3bd000,
-    //                                                        137528,
-    //                                                        "/lib/nowhere.so",
-    //                                                        false,
-    //                                                        false,
-    //                                                        false);
-    barectf_user_stream_trace_lttng_ust_statedump_end(&streamCtx, threadTid, threadPid, threadName);
+        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name, threadInfo.name);
+
+    std::cout << "dl info: " << std::endl;
+    dl_iterate_phdr(BarectfUserTrace::dlIterateCallback, this);
+
+    barectf_user_stream_trace_lttng_ust_statedump_end(
+        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name);
+    isStatedumpDone = true;
 }

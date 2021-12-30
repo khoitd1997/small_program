@@ -36,6 +36,7 @@ mkdir -p "${build_dir}"
 cd "${build_dir}"
 cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
 
+# gdb ./test_barectf_app_exe lorem ipsum nulla dolore consequat
 ./test_barectf_app_exe lorem ipsum nulla dolore consequat
 
 cp "${generated_kernel_meta_dir}/metadata" "${kernel_trace_dir}/metadata"
@@ -46,6 +47,7 @@ cp "${generated_user_meta_dir}/metadata" "${user_trace_dir}/metadata"
 # after the metadata file has been generated
 sed -i 's/lttng_ust_statedump_/lttng_ust_statedump:/g' "${user_trace_dir}/metadata"
 sed -i 's/lttng_ust_libc_/lttng_ust_libc:/g' "${user_trace_dir}/metadata"
+sed -i 's/lttng_ust_cyg_profile_/lttng_ust_cyg_profile:/g' "${user_trace_dir}/metadata"
 
 echo "Reading trace using babeltrace"
 babeltrace2 user_trace
