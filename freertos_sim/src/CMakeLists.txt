@@ -7,7 +7,7 @@ set(FREERTOS_PLUS_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS-Plus")
 set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
-file(GLOB app_source ${APP_DIR}/*.c)
+set(app_source ${APP_DIR}/main.c ${APP_DIR}/main_full.c ${APP_DIR}/console.c)
 file(GLOB kernel_source ${FREERTOS_DIR}/Source/*.c)
 
 set(demo_lib_src
@@ -40,13 +40,7 @@ set(demo_lib_src
     ${KERNEL_DIR}/portable/MemMang/heap_3.c
     # posix port
     ${KERNEL_DIR}/portable/ThirdParty/GCC/Posix/utils/wait_for_event.c
-    ${KERNEL_DIR}/portable/ThirdParty/GCC/Posix/port.c
-    # Trace library
-    ${FREERTOS_PLUS_DIR}/Source/FreeRTOS-Plus-Trace/trcKernelPort.c
-    ${FREERTOS_PLUS_DIR}/Source/FreeRTOS-Plus-Trace/trcSnapshotRecorder.c
-    ${FREERTOS_PLUS_DIR}/Source/FreeRTOS-Plus-Trace/trcStreamingRecorder.c
-    ${FREERTOS_PLUS_DIR}/Source/FreeRTOS-Plus-Trace/streamports/File/trcStreamingPort.c
-)
+    ${KERNEL_DIR}/portable/ThirdParty/GCC/Posix/port.c)
 
 set(include_dirs
     ${APP_DIR}
@@ -59,8 +53,6 @@ set(include_dirs
 add_executable(freertos_posix_demo ${demo_lib_src} ${app_source}
                                    ${kernel_source})
 target_include_directories(freertos_posix_demo PUBLIC ${include_dirs})
-target_compile_definitions(
-  freertos_posix_demo PUBLIC _WINDOWS_ USER_DEMO=0 projCOVERAGE_TEST=0
-                             TRACE_ON_ENTER=0)
-target_compile_options(freertos_posix_demo PUBLIC -g)
+target_compile_definitions(freertos_posix_demo PUBLIC _WINDOWS_)
+target_compile_options(freertos_posix_demo PUBLIC -g -Wall)
 target_link_libraries(freertos_posix_demo PUBLIC pthread)
