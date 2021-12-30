@@ -173,25 +173,7 @@ void doUserTrace() {
     BarectfUserTraceGuard    traceGuard{userTrace};
     barectf_user_stream_ctx* userStreamPtr = userTrace.getStreamCtxPtr();
 
-    barectf_user_stream_trace_lttng_ust_statedump_start(
-        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
-    barectf_user_stream_trace_lttng_ust_statedump_procname(userStreamPtr,
-                                                           userThreadVtid,
-                                                           userThreadPid,
-                                                           userThreadName.c_str(),
-                                                           userThreadName.c_str());
-    barectf_user_stream_trace_lttng_ust_statedump_bin_info(userStreamPtr,
-                                                           userThreadVtid,
-                                                           userThreadPid,
-                                                           userThreadName.c_str(),
-                                                           0x7f190d3bd000,
-                                                           137528,
-                                                           "/lib/nowhere.so",
-                                                           false,
-                                                           false,
-                                                           false);
-    barectf_user_stream_trace_lttng_ust_statedump_end(
-        userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str());
+    userTrace.doBasicStatedump();
 
     barectf_user_stream_trace_lttng_ust_libc_calloc(
         userStreamPtr, userThreadVtid, userThreadPid, userThreadName.c_str(), 24, 1, 0x192fe40);

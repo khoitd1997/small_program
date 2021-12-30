@@ -10,3 +10,4 @@ target_include_directories(
   test_barectf_app_exe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
                               ${bare_ctf_generated_src})
 target_compile_options(test_barectf_app_exe PUBLIC -g -Wall -Werror)
+target_link_libraries(test_barectf_app_exe PUBLIC pthread)

@@ -112,8 +112,16 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
     bool init(const unsigned int bufSize, std::string_view traceFilePath);
     void finish();
 
+    // TODO: Decide in the future if we want to also open packet in init instead
+    // seems like for most usecase, we will technically only have one packet for
+    // the entire tracing session so it makes more sense to open it in init
     void openPacket();
     void closePacket();
+
+    // user tracing in lttng/trace compass requires having state dump packets before
+    // doing any other kind of events, this command takes care of creating very basic
+    // statedump packets for that
+    void doBasicStatedump();
 
    private:
     static void openPacketCallback(void* const data);

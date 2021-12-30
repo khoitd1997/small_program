@@ -23,11 +23,15 @@
  * SOFTWARE.
  */
 
+#include <pthread.h>
+#include <unistd.h>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include <stdexcept>
 
 #include "barectf-platform-linux-fs.h"
 #include "barectf.h"
@@ -71,16 +75,16 @@ void BarectfKernelTrace::closePacket() {
     }
 }
 
-void BarectfKernelTrace::openPacketCallback(void *const data) {
-    BarectfKernelTrace *kernelTrace = static_cast<BarectfKernelTrace *>(data);
+void BarectfKernelTrace::openPacketCallback(void* const data) {
+    BarectfKernelTrace* kernelTrace = static_cast<BarectfKernelTrace*>(data);
     kernelTrace->openPacket();
 }
-void BarectfKernelTrace::closePacketCallback(void *const data) {
-    BarectfKernelTrace *kernelTrace = static_cast<BarectfKernelTrace *>(data);
+void BarectfKernelTrace::closePacketCallback(void* const data) {
+    BarectfKernelTrace* kernelTrace = static_cast<BarectfKernelTrace*>(data);
     kernelTrace->closePacket();
 }
-int BarectfKernelTrace::isBackendFullCallback(void *const data) {
-    BarectfKernelTrace *kernelTrace   = static_cast<BarectfKernelTrace *>(data);
+int BarectfKernelTrace::isBackendFullCallback(void* const data) {
+    BarectfKernelTrace* kernelTrace   = static_cast<BarectfKernelTrace*>(data);
     int                 isBackendFull = 0;
 
     if (kernelTrace->simulateFullBackend) {
@@ -122,12 +126,40 @@ void BarectfUserTrace::closePacket() {
     }
 }
 
-void BarectfUserTrace::openPacketCallback(void *const data) {
-    BarectfUserTrace *userTrace = static_cast<BarectfUserTrace *>(data);
+void BarectfUserTrace::openPacketCallback(void* const data) {
+    BarectfUserTrace* userTrace = static_cast<BarectfUserTrace*>(data);
     userTrace->openPacket();
 }
-void BarectfUserTrace::closePacketCallback(void *const data) {
-    BarectfUserTrace *userTrace = static_cast<BarectfUserTrace *>(data);
+void BarectfUserTrace::closePacketCallback(void* const data) {
+    BarectfUserTrace* userTrace = static_cast<BarectfUserTrace*>(data);
     userTrace->closePacket();
 }
-int BarectfUserTrace::isBackendFullCallback(void *const data) { return 0; }
+int BarectfUserTrace::isBackendFullCallback(void* const data) { return 0; }
+
+void BarectfUserTrace::doBasicStatedump() {
+    // TODO: In the future we will need to get these info differently
+    // for different OS
+    char          threadName[50];
+    const int32_t threadTid = static_cast<int32_t>(gettid());
+    const int32_t threadPid = static_cast<int32_t>(getpid());
+    if (0 != pthread_getname_np(pthread_self(), threadName, std::size(threadName))) {
+        throw std::runtime_error("Failed to get thread name");
+    }
+
+    barectf_user_stream_trace_lttng_ust_statedump_start(
+        &streamCtx, threadTid, threadPid, threadName);
+    barectf_user_stream_trace_lttng_ust_statedump_procname(
+        &streamCtx, threadTid, threadPid, threadName, threadName);
+    // TODO: Adjust this for static apps that doesn't use any dynamic library
+    // barectf_user_stream_trace_lttng_ust_statedump_bin_info(&streamCtx,
+    //                                                        threadTid,
+    //                                                        threadPid,
+    //                                                        threadName,
+    //                                                        0x7f190d3bd000,
+    //                                                        137528,
+    //                                                        "/lib/nowhere.so",
+    //                                                        false,
+    //                                                        false,
+    //                                                        false);
+    barectf_user_stream_trace_lttng_ust_statedump_end(&streamCtx, threadTid, threadPid, threadName);
+}
