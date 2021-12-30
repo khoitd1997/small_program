@@ -5,7 +5,7 @@ set(FREERTOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS")
 set(KERNEL_DIR "${FREERTOS_DIR}/Source")
 set(FREERTOS_PLUS_DIR
     "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS-Plus")
-set(APP_DIR "${FREERTOS_DIR}/Demo/Posix_GCC")
+set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 file(GLOB app_source ${APP_DIR}/*.c)
 file(GLOB kernel_source ${FREERTOS_DIR}/Source/*.c)
