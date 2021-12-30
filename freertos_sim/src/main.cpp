@@ -54,6 +54,9 @@
 
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
+// NOTE: FreeRTOS hook list:
+// https://www.freertos.org/a00016.html
+
 /*-----------------------------------------------------------*/
 
 /* When configSUPPORT_STATIC_ALLOCATION is set to 1 the application writer can
@@ -84,27 +87,6 @@ void vAssertCalled(const char* const pcFileName, unsigned long ulLine) {
     }
     taskEXIT_CRITICAL();
 }
-
-/*
- * Prototypes for the standard FreeRTOS application hook (callback) functions
- * implemented within this file.  See http://www.freertos.org/a00016.html .
- */
-void vApplicationMallocFailedHook(void);
-void vApplicationIdleHook(void);
-void vApplicationStackOverflowHook(TaskHandle_t pxTask, char* pcTaskName);
-void vApplicationTickHook(void);
-void vApplicationGetIdleTaskMemory(StaticTask_t** ppxIdleTaskTCBBuffer,
-                                   StackType_t**  ppxIdleTaskStackBuffer,
-                                   uint32_t*      pulIdleTaskStackSize);
-void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
-                                    StackType_t**  ppxTimerTaskStackBuffer,
-                                    uint32_t*      pulTimerTaskStackSize);
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
 
 void vApplicationMallocFailedHook(void) {
     /* vApplicationMallocFailedHook() will only be called if
@@ -157,8 +139,6 @@ void vApplicationTickHook(void) {
      * added here, but the tick hook is called from an interrupt context, so
      * code must not attempt to block, and only the interrupt safe FreeRTOS API
      * functions can be used (those that end in FromISR()). */
-
-    // { vFullDemoTickHookFunction(); }
 }
 
 void vLoggingPrintf(const char* pcFormat, ...) {
