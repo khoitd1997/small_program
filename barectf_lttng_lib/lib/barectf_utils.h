@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 // does not count the null terminator
 constexpr size_t MAX_THREAD_NAME_STR_SIZE = 50;
@@ -39,3 +40,7 @@ struct BarectfThreadInfo {
 };
 
 bool getCurrThreadInfo(BarectfThreadInfo& out);
+
+inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
+inline std::string getDefaultKernelTraceDir() { return getDefaultTraceRootDir() + "/kernel_trace"; }
+inline std::string getDefaultUserTraceDir() { return getDefaultTraceRootDir() + "/user_trace"; }

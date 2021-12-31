@@ -6,8 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../barectf-test
-                 ${CMAKE_BINARY_DIR}/barectf_lib)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../barectf_lttng_lib
+                 ${CMAKE_BINARY_DIR}/barectf_lttng_lib)
 
 set(FREERTOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS")
 set(KERNEL_DIR "${FREERTOS_DIR}/Source")
@@ -61,7 +61,7 @@ add_executable(freertos_posix_demo ${demo_lib_src} ${app_source}
 target_include_directories(freertos_posix_demo PUBLIC ${include_dirs})
 target_compile_definitions(freertos_posix_demo PUBLIC _WINDOWS_)
 target_compile_options(freertos_posix_demo PUBLIC -g -Wall)
-target_link_libraries(freertos_posix_demo PUBLIC pthread bare_ctf_lib)
+target_link_libraries(freertos_posix_demo PUBLIC pthread barectf_lttng_lib)
 
 add_custom_command(
   TARGET freertos_posix_demo

@@ -55,6 +55,8 @@
 #include "console.h"
 #include "trace_hook.h"
 
+#include "barectf_utils.h"
+
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
 // NOTE: FreeRTOS hook list:
@@ -234,13 +236,11 @@ void basicTask(void* pvParameters) {
     vTaskDelete(nullptr);
 }
 
-const std::string kernelTraceDir = "/home/kd/small_program/freertos_sim/build/kernel_trace";
-
 int main(void) {
     console_init();
     console_print("Starting FreeRTOS Posix\n");
 
-    if (!traceHookInit(1024 * 1024 * 5, kernelTraceDir + "/trace_stream")) {
+    if (!traceHookInit(1024 * 1024 * 5, getDefaultKernelTraceDir() + "/trace_hook_stream")) {
         std::cout << "Failed traceHookInit" << std::endl;
         return -1;
     }
