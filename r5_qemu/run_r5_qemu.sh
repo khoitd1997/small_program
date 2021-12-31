@@ -5,7 +5,7 @@ set -e
 script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 qemu_dts_repo_dir="${script_dir}/qemu-devicetrees-xilinx-v2020.1"
 zcu102_dtb_path="${qemu_dts_repo_dir}/LATEST/SINGLE_ARCH/zcu102-arm.dtb"
-r5_elf_path="/home/kd/workspace_r5_test/test_r5/Debug/test_r5.elf"
+r5_elf_path="${script_dir}/build/r5_test.elf"
 
 cd "${qemu_dts_repo_dir}"
 make

@@ -41,21 +41,21 @@ add_library(test_lib "${CMAKE_CURRENT_SOURCE_DIR}/test_lib/lib_src.cpp")
 target_include_directories(test_lib
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_lib")
 
-add_executable(r5_test "${app_src}/main.cpp")
-add_dependencies(r5_test r5_bsp_lib_target)
-target_include_directories(r5_test PUBLIC ${r5_bsp_export_include_dir})
-# target_compile_definitions(r5_test PUBLIC _WINDOWS_)
-target_compile_options(r5_test PUBLIC -g -Wall)
-target_link_libraries(r5_test test_lib)
+add_executable(r5_test.elf "${app_src}/main.cpp")
+add_dependencies(r5_test.elf r5_bsp_lib_target)
+target_include_directories(r5_test.elf PUBLIC ${r5_bsp_export_include_dir})
+# target_compile_definitions(r5_test.elf PUBLIC _WINDOWS_)
+target_compile_options(r5_test.elf PUBLIC -g -Wall)
+target_link_libraries(r5_test.elf test_lib)
 
-set_target_properties(r5_test PROPERTIES LINK_DEPENDS "${linker_script}")
+set_target_properties(r5_test.elf PROPERTIES LINK_DEPENDS "${linker_script}")
 
 set(CMAKE_EXE_LINKER_FLAGS
     "${CMAKE_EXE_LINKER_FLAGS} -Wl,-T -Wl,${linker_script} -L${r5_bsp_export_lib_dir}"
 )
 
-# add_custom_command( TARGET r5_test COMMAND nm -C $<TARGET_FILE:r5_test> >
-# ${CMAKE_BINARY_DIR}/symbols.txt)
+# add_custom_command( TARGET r5_test.elf COMMAND nm -C
+# $<TARGET_FILE:r5_test.elf> > ${CMAKE_BINARY_DIR}/symbols.txt)
 
 # for generating disassembly add_custom_command( TARGET ${TARGET}.elf POST_BUILD
 # COMMAND ${CMAKE_OBJDUMP} -S ${TARGET}.elf > ${TARGET}.disasm COMMENT
