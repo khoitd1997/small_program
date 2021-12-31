@@ -3,7 +3,7 @@
 set -e
 
 script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-config_dir="${script_dir}/configs"
+config_dir="${script_dir}/../barectf_configs"
 config_file_path="${config_dir}/config.yml"
 
 generated_kernel_meta_dir="${script_dir}/generated_kernel_trace_metadata"
@@ -50,4 +50,4 @@ sed -i 's/lttng_ust_libc_/lttng_ust_libc:/g' "${user_trace_dir}/metadata"
 sed -i 's/lttng_ust_cyg_profile_/lttng_ust_cyg_profile:/g' "${user_trace_dir}/metadata"
 
 echo "Reading trace using babeltrace"
-babeltrace2 user_trace
+babeltrace2 "${user_trace_dir}"

@@ -1,12 +1,10 @@
 #pragma once
 
+#include <string_view>
+
 #include "trace_hook_macros.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef enum {
+enum {
     FREERTOS_TASK_SWITCHED_IN,
     FREERTOS_INCREASE_TICK_COUNT,
     FREERTOS_LOW_POWER_IDLE_BEGIN,
@@ -79,6 +77,5 @@ typedef enum {
     FREERTOS_TASK_NOTIFY_GIVE_FROM_ISR,
 } stm_trace_events;
 
-#ifdef __cplusplus
-}
-#endif
+bool traceHookInit(const unsigned int bufSize, std::string_view traceFilePath);
+void traceHookFinish();

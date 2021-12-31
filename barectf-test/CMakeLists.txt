@@ -4,7 +4,7 @@ project(test_barectf_app C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-set(common_compile_flags -g -Wall -Werror)
+set(common_compile_flags -g -Wall)
 
 set(bare_ctf_generated_src "${CMAKE_CURRENT_SOURCE_DIR}/barectf_generated_src")
 add_library(

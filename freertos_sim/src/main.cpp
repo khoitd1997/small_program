@@ -53,6 +53,7 @@
 #include "task.h"
 
 #include "console.h"
+#include "trace_hook.h"
 
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
@@ -226,14 +227,22 @@ void basicTask(void* pvParameters) {
     --totalTaskCount;
     if (totalTaskCount == 0) {
         console_print("All task is done, exitting\n");
+        traceHookFinish();
         std::exit(0);
     }
     vTaskDelete(nullptr);
 }
 
+const std::string kernelTraceDir = "/home/kd/small_program/freertos_sim/build/kernel_trace";
+
 int main(void) {
     console_init();
     console_print("Starting FreeRTOS Posix\n");
+
+    if (!traceHookInit(1024 * 1024 * 5, kernelTraceDir + "/trace_stream")) {
+        std::cout << "Failed traceHookInit" << std::endl;
+        return -1;
+    }
 
     if (pdPASS != xTaskCreate(basicTask, "task_1", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_1" << std::endl;
