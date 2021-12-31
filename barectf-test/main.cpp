@@ -43,8 +43,9 @@ constexpr int32_t userThreadVtid = 5;
 constexpr int32_t userThreadPid  = 5;
 const std::string userThreadName = "User_Thread";
 
-const std::string kernelTraceDir = "kernel_trace";
-const std::string userTraceDir   = "user_trace";
+static std::string getTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
+static std::string getKernelTraceDir() { return getTraceRootDir() + "/kernel_trace"; }
+static std::string getUserTraceDir() { return getTraceRootDir() + "/user_trace"; }
 
 BarectfKernelTrace kernelTrace1;
 // BarectfKernelTrace kernelTrace2;
@@ -170,14 +171,16 @@ void doUserTrace() {
     //     userStreamPtr, threadInfo.tid, threadInfo.pid, threadInfo.name, 0x192fe40);
 }
 
-static BarectfFunctionInstrument barectfFunctionInstrument(
-    TRACE_BUFFER_SIZE_BYTE, "user_trace/user_stream_function_instrument");
+static BarectfFunctionInstrument barectfFunctionInstrument(TRACE_BUFFER_SIZE_BYTE,
+                                                           getUserTraceDir() +
+                                                               "/user_stream_function_instrument");
 
 int main(const int argc, const char* const argv[]) {
     bool ret;
 
     std::cout << "Initting kernelTrace1" << std::endl;
-    ret = kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, kernelTraceDir + "/kernel_stream1", 0, 0, 0);
+    ret =
+        kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, getKernelTraceDir() + "/kernel_stream1", 0, 0, 0);
     if (!ret) {
         std::cout << "Failed to initialize kernelTrace1" << std::endl;
         return -1;
@@ -189,7 +192,7 @@ int main(const int argc, const char* const argv[]) {
     // }
 
     std::cout << "Initting userTrace" << std::endl;
-    ret = userTrace.init(TRACE_BUFFER_SIZE_BYTE, userTraceDir + "/user_stream");
+    ret = userTrace.init(TRACE_BUFFER_SIZE_BYTE, getUserTraceDir() + "/user_stream");
     if (!ret) {
         std::cout << "Failed to initialize userTrace" << std::endl;
         return -1;
