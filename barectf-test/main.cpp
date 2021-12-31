@@ -43,23 +43,6 @@ constexpr int32_t userThreadVtid = 5;
 constexpr int32_t userThreadPid  = 5;
 const std::string userThreadName = "User_Thread";
 
-enum TaskState : int64_t {
-    TASK_RUNNING         = 0,
-    TASK_INTERRUPTIBLE   = 1,
-    TASK_UNINTERRUPTIBLE = 2,
-    TASK_STOPPED         = 4,
-    TASK_TRACED          = 8,
-    EXIT_DEAD            = 16,
-    EXIT_ZOMBIE          = 32,
-    TASK_PARKED          = 64,
-    TASK_DEAD            = 128,
-    TASK_WAKEKILL        = 256,
-    TASK_WAKING          = 512,
-    TASK_NOLOAD          = 1024,
-    TASK_NEW             = 2048,
-    TASK_STATE_MAX       = 4096,
-};
-
 const std::string kernelTraceDir = "kernel_trace";
 const std::string userTraceDir   = "user_trace";
 

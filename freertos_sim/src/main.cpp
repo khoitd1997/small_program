@@ -227,6 +227,7 @@ void basicTask(void* pvParameters) {
     --totalTaskCount;
     if (totalTaskCount == 0) {
         console_print("All task is done, exitting\n");
+        vTaskDelay(pdMS_TO_TICKS(5));
         traceHookFinish();
         std::exit(0);
     }
