@@ -149,17 +149,8 @@ int BarectfUserTrace::dlIterateCallback(dl_phdr_info* info, size_t size, void* d
     std::string objName = info->dlpi_name;
     if (objName.empty()) { objName = getCurrExePath(); }
 
-    std::cout << "Name: " << info->dlpi_name << std::endl;
-    std::cout << std::hex << "Base address: 0x" << info->dlpi_addr << std::endl;
     size_t objMemsz = 0;
-    for (auto j = 0; j < info->dlpi_phnum; j++) {
-        objMemsz += info->dlpi_phdr[j].p_memsz;
-        printf("\t\t header %2d: address=%10p\n",
-               j,
-               (void*)(info->dlpi_addr + info->dlpi_phdr[j].p_vaddr));
-    }
-    std::cout << std::hex << "Size: 0x" << objMemsz << std::endl;
-    std::cout << std::endl;
+    for (auto j = 0; j < info->dlpi_phnum; j++) { objMemsz += info->dlpi_phdr[j].p_memsz; }
 
     barectf_user_stream_trace_lttng_ust_statedump_bin_info(userTrace->getStreamCtxPtr(),
                                                            threadInfo.tid,
@@ -196,7 +187,6 @@ void BarectfUserTrace::doBasicStatedump() {
     barectf_user_stream_trace_lttng_ust_statedump_procname(
         &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name, threadInfo.name);
 
-    std::cout << "dl info: " << std::endl;
     dl_iterate_phdr(BarectfUserTrace::dlIterateCallback, this);
 
     barectf_user_stream_trace_lttng_ust_statedump_end(
