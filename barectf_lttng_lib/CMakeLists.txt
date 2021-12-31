@@ -39,16 +39,17 @@ add_custom_command(
   OUTPUT ${barectf_generated_src_files}
   VERBATIM)
 
+set(lib_dir "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 add_library(
   barectf_lttng_lib
-  barectf_function_instrument.cpp barectf_utils.cpp
-  barectf-platform-linux-fs.cpp ${barectf_generated_src_files})
-target_include_directories(
-  barectf_lttng_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-                           ${barectf_generated_src_dir})
+  "${lib_dir}/barectf_function_instrument.cpp" "${lib_dir}/barectf_utils.cpp"
+  "${lib_dir}/barectf-platform-linux-fs.cpp" ${barectf_generated_src_files})
+target_include_directories(barectf_lttng_lib
+                           PUBLIC ${lib_dir} ${barectf_generated_src_dir})
 target_compile_options(barectf_lttng_lib PUBLIC ${common_compile_flags})
 target_link_libraries(barectf_lttng_lib PUBLIC pthread)
 
+# Test App Build
 add_executable(test_barectf_app_exe main.cpp)
 target_link_libraries(test_barectf_app_exe PUBLIC barectf_lttng_lib)
 target_compile_options(test_barectf_app_exe PUBLIC ${common_compile_flags}
