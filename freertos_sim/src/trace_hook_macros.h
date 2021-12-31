@@ -35,8 +35,10 @@ extern "C" {
 
 #include <stdint.h>
 
-void taskSwitchedInHook(char* taskName);
-void taskSwitchedOutHook(char* taskName);
+// can't use TaskHandle_t here since including tasks.h here will cause
+// an include loop
+void taskSwitchedInHook(void* taskHandleVoidPtr);
+void taskSwitchedOutHook(void* taskHandleVoidPtr);
 
 #define STM_BASE 0xf8000000
 
@@ -68,11 +70,8 @@ written. */
 
 /* Called after a task has been selected to run.  pxCurrentTCB holds a pointer
 to the task control block of the selected task. */
-#define traceTASK_SWITCHED_IN()                           \
-    {                                                     \
-        TCB_t* pxCurrentTCBCopy = pxCurrentTCB;           \
-        taskSwitchedInHook(pxCurrentTCBCopy->pcTaskName); \
-    }
+#define traceTASK_SWITCHED_IN() \
+    { taskSwitchedInHook(pxCurrentTCB); }
 
 /* Called before stepping the tick count after waking from tickless idle
 sleep. */
@@ -92,11 +91,8 @@ sleep. */
 
 /* Called before a task has been selected to run.  pxCurrentTCB holds a pointer
 to the task control block of the task being switched out. */
-#define traceTASK_SWITCHED_OUT()                           \
-    {                                                      \
-        TCB_t* pxCurrentTCBCopy = pxCurrentTCB;            \
-        taskSwitchedOutHook(pxCurrentTCBCopy->pcTaskName); \
-    }
+#define traceTASK_SWITCHED_OUT() \
+    { taskSwitchedOutHook(pxCurrentTCB); }
 
 /* Called when a task attempts to take a mutex that is already held by a
 lower priority task.  pxTCBOfMutexHolder is a pointer to the TCB of the task

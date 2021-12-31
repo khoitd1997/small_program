@@ -6,18 +6,27 @@
 #include "task.h"
 
 #include "barectf-platform-linux-fs.h"
+#include "barectf_utils.h"
 #include "freertos_utils.h"
 #include "trace_hook.h"
 
 static BarectfKernelTrace hookKernelTrace;
 
-void taskSwitchedInHook(char* taskName) {
+// FreeRTOS doesn't provide a single event that provides both
+// previous and next task so we have to remember
+static BarectfThreadInfo prevTask;
+
+void taskSwitchedInHook(void* taskHandleVoidPtr) {
     FreeRTOSCriticalSectionGuard guard{};
-    std::cout << "Task " << taskName << " is switched in" << std::endl;
+    TaskHandle_t                 taskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
+
+    std::cout << "Task " << pcTaskGetName(taskHandle) << " is switched in" << std::endl;
 }
-void taskSwitchedOutHook(char* taskName) {
+void taskSwitchedOutHook(void* taskHandleVoidPtr) {
     FreeRTOSCriticalSectionGuard guard{};
-    std::cout << "Task " << taskName << " is switched out" << std::endl;
+    TaskHandle_t                 taskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
+
+    std::cout << "Task " << pcTaskGetName(taskHandle) << " is switched out" << std::endl;
 }
 
 bool traceHookInit(const unsigned int bufSize, std::string_view traceFilePath) {
