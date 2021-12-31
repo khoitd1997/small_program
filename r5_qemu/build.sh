@@ -2,14 +2,12 @@
 
 set -e
 
-source /tools/Xilinx/Vitis/2020.1/settings64.sh
-
 script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-vitis_build_dir="${script_dir}/vitis_build"
+build_dir="${script_dir}/build"
 
-rm -rf "${vitis_build_dir}"
-mkdir "${vitis_build_dir}"
+rm -rf "${build_dir}"
+mkdir "${build_dir}"
 
-cd "${vitis_build_dir}"
-cp "${script_dir}/zcu102.xsa" .
-xsct "${script_dir}/build.tcl"
+cd "${build_dir}"
+cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="${script_dir}/toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
+# "/tools/Xilinx/Vitis/2020.1/bin/xsct" "${script_dir}/build_bsp.tcl" "${script_dir}/zcu102.xsa"
