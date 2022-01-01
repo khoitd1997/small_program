@@ -26,7 +26,9 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#ifdef TRACE_HOOK_MACRO_INCLUDE_DIR
 #include "trace_hook_macros.h"
+#endif
 
 /*-----------------------------------------------------------
  * Application specific definitions.
