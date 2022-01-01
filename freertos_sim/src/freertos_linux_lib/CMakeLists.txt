@@ -59,3 +59,4 @@ endif()
 
 target_include_directories(freertos_lib PUBLIC ${include_dirs})
 target_compile_definitions(freertos_lib PUBLIC ${compile_definitions})
+target_link_libraries(freertos_lib PUBLIC pthread)
