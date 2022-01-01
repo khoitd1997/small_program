@@ -48,6 +48,7 @@
 #include <unistd.h>
 #include <atomic>
 #include <iostream>
+#include <stdexcept>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -219,7 +220,19 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 }
 }
 
-std::atomic_int totalTaskCount = 0;
+std::atomic_int               totalTaskCount   = 0;
+static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
+static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(calloc(traceHookBufSize, 1));
+
+void writeTraceToFile(void* buf, unsigned int bufSize, std::string_view traceFilePath) {
+    FILE* traceFileFd = fopen(traceFilePath.data(), "wb");
+    if (nullptr == traceFileFd) { throw std::runtime_error("Failed to open trace file"); }
+
+    const size_t nmemb = fwrite(buf, bufSize, 1, traceFileFd);
+
+    if (nmemb != 1) { throw std::runtime_error("Failed to write to trace file"); }
+    fclose(traceFileFd);
+}
 
 void basicTask(void* pvParameters) {
     console_print("I am task %s\n", pcTaskGetName(nullptr));
@@ -235,13 +248,12 @@ void basicTask(void* pvParameters) {
         console_print("All task is done, exitting\n");
         vTaskDelay(pdMS_TO_TICKS(5));
         traceHookFinish();
+        writeTraceToFile(
+            traceHookBufAddr, traceHookBufSize, getDefaultKernelTraceDir() + "/trace_hook_stream");
         std::exit(0);
     }
     vTaskDelete(nullptr);
 }
-
-static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
-static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(malloc(traceHookBufSize));
 
 int main(void) {
     console_init();
