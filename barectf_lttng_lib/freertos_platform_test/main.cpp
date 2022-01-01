@@ -57,6 +57,10 @@
 
 #include "barectf_utils.h"
 
+inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
+inline std::string getDefaultKernelTraceDir() { return getDefaultTraceRootDir() + "/kernel_trace"; }
+inline std::string getDefaultUserTraceDir() { return getDefaultTraceRootDir() + "/user_trace"; }
+
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 
 // NOTE: FreeRTOS hook list:
@@ -236,11 +240,14 @@ void basicTask(void* pvParameters) {
     vTaskDelete(nullptr);
 }
 
+static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
+static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(malloc(traceHookBufSize));
+
 int main(void) {
     console_init();
     console_print("Starting FreeRTOS Posix\n");
 
-    if (!traceHookInit(1024 * 1024 * 5, getDefaultKernelTraceDir() + "/trace_hook_stream")) {
+    if (!traceHookInit(traceHookBufAddr, traceHookBufSize)) {
         std::cout << "Failed traceHookInit" << std::endl;
         return -1;
     }

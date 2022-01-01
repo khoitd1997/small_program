@@ -48,11 +48,12 @@ class BarectfBaseTrace {
    public:
     T* getStreamCtxPtr() __attribute__((no_instrument_function)) { return &streamCtx; }
 
-    virtual void finish() __attribute__((no_instrument_function)) {
-        // fclose should already flush
-        fclose(traceFileFd);
-        delete[] barectf_packet_buf(&streamCtx);
+    void init(uint8_t* bufAddr, const unsigned int bufSize)
+        __attribute__((no_instrument_function)) {
+        traceBuffer  = bufAddr;
+        traceBufSize = bufSize;
     }
+    virtual void finish() __attribute__((no_instrument_function)) {}
 
    protected:
     static uint64_t getClockValueCallback(void* const data)
@@ -64,26 +65,15 @@ class BarectfBaseTrace {
         return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
     }
 
-    bool writeToFile() __attribute__((no_instrument_function)) {
-        const size_t nmemb = fwrite(
-            barectf_packet_buf(&streamCtx), barectf_packet_buf_size(&streamCtx), 1, traceFileFd);
-
-        return nmemb == 1;
-    }
-
-    FILE*    traceFileFd = nullptr;
-    uint8_t* traceBuffer = nullptr;
+    uint8_t*     traceBuffer  = nullptr;
+    unsigned int traceBufSize = 0;
 
     T streamCtx = {};
 };
 
 class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream_ctx> {
    public:
-    bool init(const unsigned int bufSize,
-              std::string_view   traceFilePath,
-              const int          simulateFullBackend,
-              const unsigned int fullBackendRandLt,
-              const unsigned int fullBackendRandMax);
+    bool init(uint8_t* bufAddr, const unsigned int bufSize);
     void finish();
 
     void openPacket();
@@ -93,10 +83,6 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
     static void openPacketCallback(void* const data);
     static void closePacketCallback(void* const data);
     static int  isBackendFullCallback(void* const data);
-
-    int          simulateFullBackend;
-    unsigned int fullBackendRandLt;
-    unsigned int fullBackendRandMax;
 
     static constexpr barectf_platform_callbacks barectfCallback = {
         .default_clock_get_value = getClockValueCallback,
@@ -118,7 +104,7 @@ class BarectfKernelTraceGuard {
 
 class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx> {
    public:
-    bool init(const unsigned int bufSize, std::string_view traceFilePath);
+    bool init(uint8_t* bufAddr, const unsigned int bufSize);
     void finish();
 
     // TODO: Decide in the future if we want to also open packet in init instead
@@ -131,8 +117,6 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
     // doing any other kind of events, this command takes care of creating very basic
     // statedump packets for that
     void doBasicStatedump();
-
-    bool initialized = false;
 
    private:
     static void openPacketCallback(void* const data);

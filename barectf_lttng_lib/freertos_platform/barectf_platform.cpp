@@ -26,10 +26,7 @@
 #include <unistd.h>
 #include <cassert>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
 #include <ctime>
-#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
@@ -39,28 +36,12 @@
 
 bool BarectfUserTrace::isStatedumpDone = false;
 
-bool BarectfKernelTrace::init(const unsigned int bufSize,
-                              std::string_view   traceFilePath,
-                              const int          simulateFullBackend,
-                              const unsigned int fullBackendRandLt,
-                              const unsigned int fullBackendRandMax) {
-    this->simulateFullBackend = simulateFullBackend;
-    this->fullBackendRandLt   = fullBackendRandLt;
-    this->fullBackendRandMax  = fullBackendRandMax;
-
-    traceBuffer = new uint8_t[bufSize];
-    if (nullptr == traceBuffer) { goto error; }
-
-    traceFileFd = fopen(traceFilePath.data(), "wb");
-    if (nullptr == traceFileFd) { goto error; }
+bool BarectfKernelTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
+    BarectfBaseTrace::init(bufAddr, bufSize);
 
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
 
     return true;
-
-error:
-    delete[] traceBuffer;
-    return false;
 }
 void BarectfKernelTrace::finish() {
     closePacket();
@@ -74,8 +55,6 @@ void BarectfKernelTrace::openPacket() {
 void BarectfKernelTrace::closePacket() {
     if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
         barectf_kernel_stream_close_packet(&streamCtx);
-        // TODO: Disable this
-        writeToFile();
     }
 }
 
@@ -88,35 +67,16 @@ void BarectfKernelTrace::closePacketCallback(void* const data) {
     kernelTrace->closePacket();
 }
 int BarectfKernelTrace::isBackendFullCallback(void* const data) {
-    BarectfKernelTrace* kernelTrace   = static_cast<BarectfKernelTrace*>(data);
-    int                 isBackendFull = 0;
-
-    if (kernelTrace->simulateFullBackend) {
-        if (rand() % kernelTrace->fullBackendRandMax < kernelTrace->fullBackendRandLt) {
-            isBackendFull = 1;
-            goto end;
-        }
-    }
-
-end:
-    return isBackendFull;
+    (void)(data);
+    return 0;
 }
 
-bool BarectfUserTrace::init(const unsigned int bufSize, std::string_view traceFilePath) {
-    traceBuffer = new uint8_t[bufSize];
-    if (nullptr == traceBuffer) { goto error; }
-
-    traceFileFd = fopen(traceFilePath.data(), "wb");
-    if (nullptr == traceFileFd) { goto error; }
+bool BarectfUserTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
+    BarectfBaseTrace::init(bufAddr, bufSize);
 
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
-    initialized = true;
 
     return true;
-
-error:
-    delete[] traceBuffer;
-    return false;
 }
 void BarectfUserTrace::finish() {
     closePacket();
@@ -127,7 +87,6 @@ void BarectfUserTrace::openPacket() { barectf_user_stream_open_packet(&streamCtx
 void BarectfUserTrace::closePacket() {
     if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
         barectf_user_stream_close_packet(&streamCtx);
-        writeToFile();
     }
 }
 

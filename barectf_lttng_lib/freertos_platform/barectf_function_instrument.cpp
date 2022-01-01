@@ -40,11 +40,10 @@ void __cyg_profile_func_exit(void* thisFunction, void* callSite) {
         (uint64_t)(callSite));
 }
 
-BarectfFunctionInstrument::BarectfFunctionInstrument(const unsigned int bufSize,
-                                                     std::string_view   traceFilePath) {
+BarectfFunctionInstrument::BarectfFunctionInstrument(uint8_t* bufAddr, const unsigned int bufSize) {
     FreeRTOSCriticalSectionGuard guard{};
     std::cout << "initting BarectfFunctionInstrument" << std::endl;
-    if (!userFunctionInstrumentTrace.init(bufSize, traceFilePath)) {
+    if (!userFunctionInstrumentTrace.init(bufAddr, bufSize)) {
         throw std::runtime_error("Failed to initialize function instrument");
     }
     userFunctionInstrumentTrace.openPacket();

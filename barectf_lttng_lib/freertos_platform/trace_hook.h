@@ -77,5 +77,5 @@
 //     FREERTOS_TASK_NOTIFY_GIVE_FROM_ISR,
 // } stm_trace_events;
 
-bool traceHookInit(const unsigned int bufSize, std::string_view traceFilePath);
+bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize);
 void traceHookFinish();

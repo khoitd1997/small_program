@@ -29,7 +29,7 @@ void taskSwitchedInHook(void* taskHandleVoidPtr) {
         prevTaskInfo.pid   = -1;
         prevTaskInfo.prio  = -1;
         prevTaskInfo.state = EXIT_DEAD;
-        prevTaskInfo.name       = InvalidTaskName;
+        prevTaskInfo.name  = InvalidTaskName;
     }
 
     BarectfThreadInfo nextTaskInfo;
@@ -52,14 +52,14 @@ void taskSwitchedOutHook(void* taskHandleVoidPtr) {
     prevTaskHandle = taskHandle;
 }
 
-bool traceHookInit(const unsigned int bufSize, std::string_view traceFilePath) {
+bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize) {
     if (taskSCHEDULER_NOT_STARTED != xTaskGetSchedulerState()) {
         throw std::runtime_error(
             "traceHookInit must only be called when FreeRTOS scheduler hasn't started");
         return false;
     }
 
-    if (!hookKernelTrace.init(bufSize, traceFilePath, false, false, false)) {
+    if (!hookKernelTrace.init(bufAddr, bufSize)) {
         throw std::runtime_error("failed to initialize hookKernelTrace");
         return false;
     }

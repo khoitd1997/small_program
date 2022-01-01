@@ -20,7 +20,7 @@ void __cyg_profile_func_exit(void* thisFunction, void* callSite)
 
 class BarectfFunctionInstrument {
    public:
-    BarectfFunctionInstrument(const unsigned int bufSize, std::string_view traceFilePath)
+    BarectfFunctionInstrument(uint8_t* bufAddr, const unsigned int bufSize)
         __attribute__((no_instrument_function));
     void finish() __attribute__((no_instrument_function));
 

@@ -57,7 +57,3 @@ class FreeRTOSCriticalSectionGuard {
     inline FreeRTOSCriticalSectionGuard() { taskENTER_CRITICAL(); }
     inline ~FreeRTOSCriticalSectionGuard() { taskEXIT_CRITICAL(); }
 };
-
-inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
-inline std::string getDefaultKernelTraceDir() { return getDefaultTraceRootDir() + "/kernel_trace"; }
-inline std::string getDefaultUserTraceDir() { return getDefaultTraceRootDir() + "/user_trace"; }
