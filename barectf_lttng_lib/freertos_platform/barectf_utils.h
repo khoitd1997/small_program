@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <string>
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 // does not count the null terminator
 constexpr size_t MAX_THREAD_NAME_STR_SIZE = 50;
 
@@ -36,10 +39,24 @@ struct BarectfThreadInfo {
     int32_t          prio;
     BarectfTaskState state;
 
-    char name[MAX_THREAD_NAME_STR_SIZE];
+    // freeRTOS just get a pointer back when getting the name
+    const char* name;
 };
 
-bool getCurrThreadInfo(BarectfThreadInfo& out);
+BarectfTaskState                  getBarectfTaskState(eTaskState freeRTOSState);
+[[maybe_unused]] BarectfTaskState getBarectfTaskState(TaskHandle_t taskHandle);
+
+[[maybe_unused]] int32_t getTaskPrio(TaskHandle_t taskHandle);
+[[maybe_unused]] int32_t getTaskId(TaskHandle_t taskHandle);
+
+void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo);
+void getCurrThreadInfo(BarectfThreadInfo& threadInfo);
+
+class FreeRTOSCriticalSectionGuard {
+   public:
+    inline FreeRTOSCriticalSectionGuard() { taskENTER_CRITICAL(); }
+    inline ~FreeRTOSCriticalSectionGuard() { taskEXIT_CRITICAL(); }
+};
 
 inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
 inline std::string getDefaultKernelTraceDir() { return getDefaultTraceRootDir() + "/kernel_trace"; }

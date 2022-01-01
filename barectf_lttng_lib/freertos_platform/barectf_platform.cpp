@@ -23,7 +23,6 @@
  * SOFTWARE.
  */
 
-#include <pthread.h>
 #include <unistd.h>
 #include <cassert>
 #include <cstdint>
@@ -38,8 +37,7 @@
 #include "barectf_platform.h"
 #include "barectf_utils.h"
 
-std::mutex BarectfUserTrace::statedumpMutex;
-bool       BarectfUserTrace::isStatedumpDone = false;
+bool BarectfUserTrace::isStatedumpDone = false;
 
 bool BarectfKernelTrace::init(const unsigned int bufSize,
                               std::string_view   traceFilePath,
@@ -76,6 +74,7 @@ void BarectfKernelTrace::openPacket() {
 void BarectfKernelTrace::closePacket() {
     if (barectf_packet_is_open(&streamCtx) && !barectf_packet_is_empty(&streamCtx)) {
         barectf_kernel_stream_close_packet(&streamCtx);
+        // TODO: Disable this
         writeToFile();
     }
 }
@@ -175,7 +174,7 @@ std::string BarectfUserTrace::getCurrExePath() {
 }
 void BarectfUserTrace::doBasicStatedump() {
     // we only want one statedump ever, so make sure only one guy ever does it
-    std::scoped_lock lock{statedumpMutex};
+    FreeRTOSCriticalSectionGuard lock{};
 
     if (isStatedumpDone) { return; }
 
@@ -187,6 +186,7 @@ void BarectfUserTrace::doBasicStatedump() {
     barectf_user_stream_trace_lttng_ust_statedump_procname(
         &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name, threadInfo.name);
 
+    // TODO: Check how baremetal does this
     dl_iterate_phdr(BarectfUserTrace::dlIterateCallback, this);
 
     barectf_user_stream_trace_lttng_ust_statedump_end(

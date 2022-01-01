@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <mutex>
 #include <string_view>
 #include "barectf_platform.h"
 
@@ -27,7 +26,4 @@ class BarectfFunctionInstrument {
 
    private:
     BarectfUserTrace userFunctionInstrumentTrace;
-    // TODO: Using mutex probably works on OS like Linux but for RTOS with IRQ
-    // this will need to be implemented differently using something like critical section
-    std::mutex userTraceMutex;
 };

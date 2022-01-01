@@ -121,6 +121,9 @@ void vConfigureTimerForRunTimeStats(
 #define INCLUDE_xTimerPendFunctionCall 1
 #define INCLUDE_xTaskAbortDelay 1
 
+// needed by barectf_lttng freeRTOS platform
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
+
 #define configINCLUDE_MESSAGE_BUFFER_AMP_DEMO 0
 #if (configINCLUDE_MESSAGE_BUFFER_AMP_DEMO == 1)
 extern void vGenerateCoreBInterrupt(void* xUpdatedMessageBuffer);

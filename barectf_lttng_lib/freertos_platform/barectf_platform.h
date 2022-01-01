@@ -28,7 +28,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <mutex>
 #include <string_view>
 
 #include "barectf.h"
@@ -143,9 +142,7 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
     static int         dlIterateCallback(dl_phdr_info* info, size_t size, void* data);
     static std::string getCurrExePath();
 
-    // TODO: To be replaced when moved to another OS
-    static std::mutex statedumpMutex;
-    static bool       isStatedumpDone;
+    static bool isStatedumpDone;
 
     static constexpr barectf_platform_callbacks barectfCallback = {
         .default_clock_get_value = getClockValueCallback,

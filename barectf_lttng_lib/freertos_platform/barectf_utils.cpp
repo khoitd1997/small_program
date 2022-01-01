@@ -1,33 +1,57 @@
 #include "barectf_utils.h"
 
-#include <pthread.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <iostream>
 
-bool getCurrThreadInfo(BarectfThreadInfo& out) {
-    sched_param param;
-    int         policy;
-    if (pthread_getschedparam(pthread_self(), &policy, &param)) {
-        throw std::runtime_error("Failed pthread_getschedparam");
-        return false;
-    }
+#include "FreeRTOS.h"
 
-    // TODO: In the future we will need to get these info differently
-    // for different OS
-    out = {
-        .tid = static_cast<int32_t>(gettid()),
-        .pid = static_cast<int32_t>(getpid()),
+BarectfTaskState getBarectfTaskState(eTaskState freeRTOSState) {
+    switch (freeRTOSState) {
+        case eReady:
+            return TASK_INTERRUPTIBLE;
+        case eRunning:
+            // NOTE: TASK_RUNNING for Linux only means the task is runnable(so might not be running)
+            // so can technically mean either eRunning or eReady
+            // but for FreeRTOS specifically, eRunning should be TASK_RUNNING
+            return TASK_RUNNING;
 
-        .prio = param.sched_priority,
-
-        // NOTE: This is only temporary stub, should change when out of testign
-        .state = TASK_RUNNING,
+        case eBlocked:
+            return TASK_INTERRUPTIBLE;
+        case eSuspended:
+            return TASK_UNINTERRUPTIBLE;
+        case eDeleted:
+        case eInvalid:
+            return TASK_DEAD;
     };
+    throw std::runtime_error("Unhandled case getBarectfTaskState");
+}
+BarectfTaskState getBarectfTaskState(TaskHandle_t taskHandle) {
+    const eTaskState freeRTOSState = eTaskGetState(taskHandle);
+    return getBarectfTaskState(freeRTOSState);
+}
+int32_t getTaskPrio(TaskHandle_t taskHandle) { return (int32_t)uxTaskPriorityGet(taskHandle); }
+int32_t getTaskId(TaskHandle_t taskHandle) {
+    const auto taskId = uxTaskGetTaskNumber(taskHandle);
+    std::cout << "Task ID is " << taskId << ", task handle is 0x" << std::hex << taskHandle
+              << std::endl;
 
-    if (0 != pthread_getname_np(pthread_self(), out.name, std::size(out.name))) {
-        // TODO: Might want to remove this in the future
-        throw std::runtime_error("Failed to get thread name");
-        return false;
-    }
-    return true;
+    return (int32_t)taskId;
+}
+void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo) {
+    TaskStatus_t taskStatus;
+    vTaskGetInfo(taskHandle, &taskStatus, pdFALSE, eInvalid);
+
+    const int32_t taskId = (int32_t)taskStatus.xTaskNumber;
+    // we initialize individual instead of doing aggregate so we avoid zero initialize
+    // the string array
+    threadInfo.tid   = taskId;
+    threadInfo.pid   = taskId;
+    threadInfo.prio  = (int32_t)taskStatus.uxCurrentPriority;
+    threadInfo.state = getBarectfTaskState(taskStatus.eCurrentState);
+    threadInfo.name  = taskStatus.pcTaskName;
+}
+void getCurrThreadInfo(BarectfThreadInfo& threadInfo)
+{
+    getThreadInfo(xTaskGetCurrentTaskHandle(), threadInfo);
 }
