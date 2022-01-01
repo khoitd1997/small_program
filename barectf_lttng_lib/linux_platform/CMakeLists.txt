@@ -11,7 +11,7 @@ set(common_compile_flags -g -Wall)
 add_library(
   barectf_lttng_linux_platform
   "barectf_function_instrument.cpp" "barectf_utils.cpp"
-  "barectf-platform-linux-fs.cpp")
+  "barectf_platform.cpp")
 target_include_directories(barectf_lttng_linux_platform
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(barectf_lttng_linux_platform PRIVATE -g -Wall)

@@ -6,7 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "barectf-platform-linux-fs.h"
+#include "barectf_platform.h"
 #include "barectf_utils.h"
 #include "freertos_utils.h"
 #include "trace_hook.h"

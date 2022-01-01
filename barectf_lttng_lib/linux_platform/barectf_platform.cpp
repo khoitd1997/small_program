@@ -34,8 +34,8 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "barectf-platform-linux-fs.h"
 #include "barectf.h"
+#include "barectf_platform.h"
 #include "barectf_utils.h"
 
 std::mutex BarectfUserTrace::statedumpMutex;

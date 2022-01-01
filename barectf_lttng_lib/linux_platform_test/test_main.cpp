@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <iostream>
 
-#include "barectf-platform-linux-fs.h"
 #include "barectf_function_instrument.h"
+#include "barectf_platform.h"
 #include "barectf_utils.h"
 
 /* Include the barectf public header */
@@ -175,8 +175,8 @@ int main(const int argc, const char* const argv[]) {
     bool ret;
 
     std::cout << "Initting kernelTrace1" << std::endl;
-    ret =
-        kernelTrace1.init(TRACE_BUFFER_SIZE_BYTE, getDefaultKernelTraceDir() + "/kernel_stream1", 0, 0, 0);
+    ret = kernelTrace1.init(
+        TRACE_BUFFER_SIZE_BYTE, getDefaultKernelTraceDir() + "/kernel_stream1", 0, 0, 0);
     if (!ret) {
         std::cout << "Failed to initialize kernelTrace1" << std::endl;
         return -1;

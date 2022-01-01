@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <mutex>
 #include <string_view>
-#include "barectf-platform-linux-fs.h"
+#include "barectf_platform.h"
 
 // mark extern "C" so that compiler can find it
 #ifdef __cplusplus

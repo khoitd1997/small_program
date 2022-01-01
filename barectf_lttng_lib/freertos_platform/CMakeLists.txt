@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 add_library(
   barectf_lttng_freertos_platform
   trace_hook.cpp barectf_function_instrument.cpp barectf_utils.cpp
-  barectf-platform-linux-fs.cpp)
+  barectf_platform.cpp)
 
 target_include_directories(barectf_lttng_freertos_platform
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
