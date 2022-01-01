@@ -3,8 +3,7 @@ project(freertos_linux_lib C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(FREERTOS_DIR
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../FreeRTOSv202112.00/FreeRTOS")
+set(FREERTOS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../FreeRTOSv202112.00/FreeRTOS")
 set(KERNEL_DIR "${FREERTOS_DIR}/Source")
 
 file(GLOB kernel_source ${FREERTOS_DIR}/Source/*.c)
