@@ -55,6 +55,8 @@ class BarectfBaseTrace {
     }
     virtual void finish() __attribute__((no_instrument_function)) {}
 
+    virtual ~BarectfBaseTrace() {}
+
    protected:
     static uint64_t getClockValueCallback(void* const data)
         __attribute__((no_instrument_function)) {

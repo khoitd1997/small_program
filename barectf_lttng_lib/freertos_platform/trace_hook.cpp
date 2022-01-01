@@ -9,15 +9,16 @@
 #include "barectf_utils.h"
 #include "trace_hook.h"
 
-static BarectfKernelTrace hookKernelTrace;
+static BarectfKernelTrace* hookKernelTrace = nullptr;
 
 // FreeRTOS doesn't provide a single event that provides both
 // previous and next task so we have to remember
 static TaskHandle_t prevTaskHandle = nullptr;
-// used as the name of prevTask at startup when there is no task to switch from
-static const char InvalidTaskName[] = "Invalid_Task";
+
+bool isHookKernelTraceReady() { return hookKernelTrace != nullptr; }
 
 void taskSwitchedInHook(void* taskHandleVoidPtr) {
+    if (!isHookKernelTraceReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
     TaskHandle_t                 nextTaskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
 
@@ -25,17 +26,17 @@ void taskSwitchedInHook(void* taskHandleVoidPtr) {
     if (prevTaskHandle != nullptr) {
         getThreadInfo(prevTaskHandle, prevTaskInfo);
     } else {
-        prevTaskInfo.tid   = -1;
-        prevTaskInfo.pid   = -1;
-        prevTaskInfo.prio  = -1;
-        prevTaskInfo.state = EXIT_DEAD;
-        prevTaskInfo.name  = InvalidTaskName;
+        prevTaskInfo = preSchdedulerStartThreadInfo;
+        // the scheduler has started so the pre scheduler thread
+        // will be in an infinite loop forever unless some serious
+        // error has happened
+        prevTaskInfo.state = TASK_WAKEKILL;
     }
 
     BarectfThreadInfo nextTaskInfo;
     getThreadInfo(nextTaskHandle, nextTaskInfo);
 
-    barectf_kernel_stream_trace_sched_switch(hookKernelTrace.getStreamCtxPtr(),
+    barectf_kernel_stream_trace_sched_switch(hookKernelTrace->getStreamCtxPtr(),
                                              prevTaskInfo.name,
                                              prevTaskInfo.tid,
                                              prevTaskInfo.prio,
@@ -46,6 +47,8 @@ void taskSwitchedInHook(void* taskHandleVoidPtr) {
                                              nextTaskInfo.prio);
 }
 void taskSwitchedOutHook(void* taskHandleVoidPtr) {
+    if (!isHookKernelTraceReady()) { return; }
+
     FreeRTOSCriticalSectionGuard guard{};
     TaskHandle_t                 taskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
 
@@ -59,15 +62,30 @@ bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize) {
         return false;
     }
 
-    if (!hookKernelTrace.init(bufAddr, bufSize)) {
+    if (isHookKernelTraceReady()) {
+        throw std::runtime_error("traceHookInit must only be called once");
+        return false;
+    }
+
+    hookKernelTrace = new BarectfKernelTrace();
+    if (hookKernelTrace == nullptr) {
+        throw std::runtime_error("failed to new BarectfKernelTrace");
+        return false;
+    }
+
+    if (!hookKernelTrace->init(bufAddr, bufSize)) {
         throw std::runtime_error("failed to initialize hookKernelTrace");
         return false;
     }
-    hookKernelTrace.openPacket();
+    hookKernelTrace->openPacket();
 
     return true;
 }
 void traceHookFinish() {
+    if (!isHookKernelTraceReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
-    hookKernelTrace.finish();
+
+    hookKernelTrace->finish();
+    delete hookKernelTrace;
+    hookKernelTrace = nullptr;
 }

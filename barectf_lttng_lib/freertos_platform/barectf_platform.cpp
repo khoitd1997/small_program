@@ -111,8 +111,8 @@ int BarectfUserTrace::dlIterateCallback(dl_phdr_info* info, size_t size, void* d
     for (auto j = 0; j < info->dlpi_phnum; j++) { objMemsz += info->dlpi_phdr[j].p_memsz; }
 
     barectf_user_stream_trace_lttng_ust_statedump_bin_info(userTrace->getStreamCtxPtr(),
+                                                           FreeRtosFixedPid,
                                                            threadInfo.tid,
-                                                           threadInfo.pid,
                                                            threadInfo.name,
                                                            (uintptr_t)(info->dlpi_addr),
                                                            objMemsz,
@@ -141,14 +141,14 @@ void BarectfUserTrace::doBasicStatedump() {
     getCurrThreadInfo(threadInfo);
 
     barectf_user_stream_trace_lttng_ust_statedump_start(
-        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name);
+        &streamCtx, FreeRtosFixedPid, threadInfo.tid, threadInfo.name);
     barectf_user_stream_trace_lttng_ust_statedump_procname(
-        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name, threadInfo.name);
+        &streamCtx, FreeRtosFixedPid, threadInfo.tid, threadInfo.name, threadInfo.name);
 
     // TODO: Check how baremetal does this
     dl_iterate_phdr(BarectfUserTrace::dlIterateCallback, this);
 
     barectf_user_stream_trace_lttng_ust_statedump_end(
-        &streamCtx, threadInfo.tid, threadInfo.pid, threadInfo.name);
+        &streamCtx, FreeRtosFixedPid, threadInfo.tid, threadInfo.name);
     isStatedumpDone = true;
 }

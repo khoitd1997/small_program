@@ -17,8 +17,8 @@ void __cyg_profile_func_enter(void* thisFunction, void* callSite) {
 
     barectf_user_stream_trace_lttng_ust_cyg_profile_func_entry(
         userFunctionInstrumentTracePtr->getStreamCtxPtr(),
+        FreeRtosFixedPid,
         threadInfo.tid,
-        threadInfo.pid,
         threadInfo.name,
         (uint64_t)(thisFunction),
         (uint64_t)(callSite));
@@ -33,8 +33,8 @@ void __cyg_profile_func_exit(void* thisFunction, void* callSite) {
 
     barectf_user_stream_trace_lttng_ust_cyg_profile_func_exit(
         userFunctionInstrumentTracePtr->getStreamCtxPtr(),
+        FreeRtosFixedPid,
         threadInfo.tid,
-        threadInfo.pid,
         threadInfo.name,
         (uint64_t)(thisFunction),
         (uint64_t)(callSite));

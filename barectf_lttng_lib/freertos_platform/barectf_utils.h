@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <string>
 
 #include "FreeRTOS.h"
@@ -34,7 +35,6 @@ enum BarectfTaskState : int64_t {
 
 struct BarectfThreadInfo {
     int32_t tid;
-    int32_t pid;
 
     int32_t          prio;
     BarectfTaskState state;
@@ -42,6 +42,8 @@ struct BarectfThreadInfo {
     // freeRTOS just get a pointer back when getting the name
     const char* name;
 };
+// we don't have pid in thread info since they have to be the same for bare metal
+constexpr int32_t FreeRtosFixedPid = 1;
 
 BarectfTaskState                  getBarectfTaskState(eTaskState freeRTOSState);
 [[maybe_unused]] BarectfTaskState getBarectfTaskState(TaskHandle_t taskHandle);
@@ -49,11 +51,20 @@ BarectfTaskState                  getBarectfTaskState(eTaskState freeRTOSState);
 [[maybe_unused]] int32_t getTaskPrio(TaskHandle_t taskHandle);
 [[maybe_unused]] int32_t getTaskId(TaskHandle_t taskHandle);
 
+// if getCurrThreadInfo is called before scheduler is started, this object will be returned
+inline constexpr BarectfThreadInfo preSchdedulerStartThreadInfo{
+    .tid = std::numeric_limits<typeof(BarectfThreadInfo::tid)>::max(),
+
+    .prio = 0,
+    // the state value is filled in based on context
+
+    .name = "Pre_Scheduler_Task",
+};
 void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo);
 void getCurrThreadInfo(BarectfThreadInfo& threadInfo);
 
 class FreeRTOSCriticalSectionGuard {
    public:
-    inline FreeRTOSCriticalSectionGuard() { taskENTER_CRITICAL(); }
-    inline ~FreeRTOSCriticalSectionGuard() { taskEXIT_CRITICAL(); }
+    FreeRTOSCriticalSectionGuard() __attribute__((no_instrument_function));
+    ~FreeRTOSCriticalSectionGuard() __attribute__((no_instrument_function));
 };

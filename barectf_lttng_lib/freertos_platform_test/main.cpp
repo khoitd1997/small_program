@@ -53,6 +53,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "barectf_function_instrument.h"
 #include "console.h"
 #include "trace_hook.h"
 
@@ -220,17 +221,29 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 }
 }
 
-std::atomic_int               totalTaskCount   = 0;
+std::atomic_int totalTestTask = 0;
+
 static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
 static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(calloc(traceHookBufSize, 1));
 
+static constexpr unsigned int functionTraceBufSize = 1024 * 1024 * 5;
+static uint8_t* functionTraceBufAddr = static_cast<uint8_t*>(calloc(functionTraceBufSize, 1));
+
+#define ENABLE_FUNCTION_TRACE
+
+#ifdef ENABLE_FUNCTION_TRACE
+static BarectfFunctionInstrument barectfFunctionInstrument(functionTraceBufAddr,
+                                                           functionTraceBufSize);
+#endif
+
 void writeTraceToFile(void* buf, unsigned int bufSize, std::string_view traceFilePath) {
-    FILE* traceFileFd = fopen(traceFilePath.data(), "wb");
+    FILE* traceFileFd = fopen(traceFilePath.data(), "w");
     if (nullptr == traceFileFd) { throw std::runtime_error("Failed to open trace file"); }
 
     const size_t nmemb = fwrite(buf, bufSize, 1, traceFileFd);
 
     if (nmemb != 1) { throw std::runtime_error("Failed to write to trace file"); }
+    fflush(traceFileFd);
     fclose(traceFileFd);
 }
 
@@ -238,18 +251,27 @@ void basicTask(void* pvParameters) {
     console_print("I am task %s\n", pcTaskGetName(nullptr));
     int counter = 0;
     for (;;) {
-        // vTaskDelay(pdMS_TO_TICKS(5));
+        taskYIELD();
         ++counter;
         if (counter >= 10) { break; }
     }
 
-    --totalTaskCount;
-    if (totalTaskCount == 0) {
+    --totalTestTask;
+    if (totalTestTask == 0) {
         console_print("All task is done, exitting\n");
-        vTaskDelay(pdMS_TO_TICKS(5));
+        // vTaskDelay(pdMS_TO_TICKS(100));
         traceHookFinish();
+#ifdef ENABLE_FUNCTION_TRACE
+        barectfFunctionInstrument.finish();
+#endif
+
         writeTraceToFile(
             traceHookBufAddr, traceHookBufSize, getDefaultKernelTraceDir() + "/trace_hook_stream");
+#ifdef ENABLE_FUNCTION_TRACE
+        writeTraceToFile(functionTraceBufAddr,
+                         functionTraceBufSize,
+                         getDefaultUserTraceDir() + "/function_instrument_trace");
+#endif
         std::exit(0);
     }
     vTaskDelete(nullptr);
@@ -268,17 +290,17 @@ int main(void) {
         std::cout << "Failed to create task_1" << std::endl;
         return -1;
     }
-    ++totalTaskCount;
+    ++totalTestTask;
     if (pdPASS != xTaskCreate(basicTask, "task_2", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_2" << std::endl;
         return -1;
     }
-    ++totalTaskCount;
+    ++totalTestTask;
     if (pdPASS != xTaskCreate(basicTask, "task_3", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_3" << std::endl;
         return -1;
     }
-    ++totalTaskCount;
+    ++totalTestTask;
 
     console_print("Done with main\n");
 

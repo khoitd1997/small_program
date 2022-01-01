@@ -16,7 +16,10 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../freertos/freertos_linux_lib"
 add_executable(barectf_lttng_freertos_platform_test main.cpp console.cpp)
 target_include_directories(barectf_lttng_freertos_platform_test
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(barectf_lttng_freertos_platform_test PUBLIC -g -Wall)
+target_compile_options(
+  barectf_lttng_freertos_platform_test
+  PUBLIC -g -Wall
+  PRIVATE -finstrument-functions)
 target_link_libraries(
   barectf_lttng_freertos_platform_test
   PUBLIC barectf_lttng_lib barectf_lttng_freertos_platform freertos_lib)

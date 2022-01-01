@@ -1,8 +1,8 @@
 #include "barectf_utils.h"
 
 #include <unistd.h>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include "FreeRTOS.h"
 
@@ -39,6 +39,7 @@ int32_t getTaskId(TaskHandle_t taskHandle) {
     return (int32_t)taskId;
 }
 void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo) {
+    if (taskHandle == nullptr) { throw std::runtime_error("taskHandle is null in getThreadInfo"); }
     TaskStatus_t taskStatus;
     vTaskGetInfo(taskHandle, &taskStatus, pdFALSE, eInvalid);
 
@@ -46,12 +47,32 @@ void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo) {
     // we initialize individual instead of doing aggregate so we avoid zero initialize
     // the string array
     threadInfo.tid   = taskId;
-    threadInfo.pid   = taskId;
     threadInfo.prio  = (int32_t)taskStatus.uxCurrentPriority;
     threadInfo.state = getBarectfTaskState(taskStatus.eCurrentState);
     threadInfo.name  = taskStatus.pcTaskName;
 }
-void getCurrThreadInfo(BarectfThreadInfo& threadInfo)
-{
+void getCurrThreadInfo(BarectfThreadInfo& threadInfo) {
+    // scheduler hasn't run yet so we can't use xTaskGetCurrentTaskHandle
+    // and there should only be one task running anyway
+    if (taskSCHEDULER_NOT_STARTED == xTaskGetSchedulerState()) {
+        threadInfo = preSchdedulerStartThreadInfo;
+        // if a thread is asking about itself, then it must be running
+        threadInfo.state = TASK_RUNNING;
+        return;
+    }
     getThreadInfo(xTaskGetCurrentTaskHandle(), threadInfo);
+}
+
+#include <mutex>
+static std::recursive_mutex criticalSectionMutex;
+
+// NOTE: the taskENTER_CRITICAL on Linux at least seems to mess with function tracing
+// and cause corruption in user stream trace file
+FreeRTOSCriticalSectionGuard::FreeRTOSCriticalSectionGuard() {
+    criticalSectionMutex.lock();
+    // taskENTER_CRITICAL();
+}
+FreeRTOSCriticalSectionGuard::~FreeRTOSCriticalSectionGuard() {
+    // taskEXIT_CRITICAL();
+    criticalSectionMutex.unlock();
 }
