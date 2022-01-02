@@ -13,7 +13,11 @@ add_library(
 
 target_include_directories(barectf_lttng_freertos_platform
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_options(barectf_lttng_freertos_platform PUBLIC -g -Wall)
+target_compile_options(
+  barectf_lttng_freertos_platform
+  PRIVATE -Wall -Werror
+  PRIVATE $<$<CONFIG:DEBUG>:-g -O0>
+  PRIVATE $<$<CONFIG:RELEASE>:-O3>)
 
 target_link_libraries(barectf_lttng_freertos_platform PUBLIC barectf_lttng_lib
                                                              freertos_lib)

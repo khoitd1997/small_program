@@ -22,6 +22,7 @@ sync
 mkdir -p "${build_dir}"
 cd "${build_dir}"
 cmake -G "Ninja" -DTRACE_ROOT_DIR="${trace_dir}" -DCMAKE_BUILD_TYPE=Debug "${src_dir}" && cmake --build .
+# cmake -G "Ninja" -DTRACE_ROOT_DIR="${trace_dir}" -DCMAKE_BUILD_TYPE=Release "${src_dir}" && cmake --build .
 
 # gdb ./fbarectf_lttng_freertos_platform_test
 export TRACE_ROOT_DIR="${trace_dir}"
@@ -31,9 +32,9 @@ export TRACE_ROOT_DIR="${trace_dir}"
 
 echo "Reading trace using babeltrace"
 
-echo "------------------KERNEL TRACE-------------------------"
-babeltrace2 "${kernel_trace_dir}"
-echo ""
+# echo "------------------KERNEL TRACE-------------------------"
+# babeltrace2 "${kernel_trace_dir}"
+# echo ""
 
 echo "------------------USER TRACE-------------------------"
 babeltrace2 "${user_trace_dir}"
