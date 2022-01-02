@@ -54,7 +54,6 @@
 #include "task.h"
 
 #include "barectf_function_instrument.h"
-#include "console.h"
 #include "trace_hook.h"
 
 #include "barectf_utils.h"
@@ -252,7 +251,7 @@ void writeTraceToFile(void* buf, unsigned int bufSize, std::string_view traceFil
 }
 
 void basicTask(void* pvParameters) {
-    console_print("I am task %s\n", pcTaskGetName(nullptr));
+    std::cout << "I am task " << pcTaskGetName(nullptr) << "\n";
     int counter = 0;
     for (;;) {
         taskYIELD();
@@ -262,7 +261,7 @@ void basicTask(void* pvParameters) {
 
     --totalTestTask;
     if (totalTestTask == 0) {
-        console_print("All task is done, exitting\n");
+        std::cout << "Initiating Exit" << std::endl;
         // vTaskDelay(pdMS_TO_TICKS(100));
         traceHookFinish();
 #ifdef ENABLE_FUNCTION_TRACE
@@ -276,14 +275,14 @@ void basicTask(void* pvParameters) {
                          functionTraceBufSize,
                          getDefaultUserTraceDir() + "/function_instrument_trace");
 #endif
+        std::cout << "All task is done, exitting" << std::endl;
         std::exit(0);
     }
     vTaskDelete(nullptr);
 }
 
 int main(void) {
-    console_init();
-    console_print("Starting FreeRTOS Posix\n");
+    std::cout << "Starting FreeRTOS Posix\n";
 
     if (!traceHookInit(traceHookBufAddr, traceHookBufSize)) {
         std::cout << "Failed traceHookInit" << std::endl;
@@ -306,12 +305,12 @@ int main(void) {
     }
     ++totalTestTask;
 
-    console_print("Done with main\n");
+    std::cout << "Done with main\n";
 
     /* Start the scheduler itself. */
     vTaskStartScheduler();
 
-    console_print("Failed to start scheduler!!!\n");
+    std::cout << "Failed to start scheduler!!!\n";
 
     /* Should never get here unless there was not enough heap space to create
      * the idle and other system tasks. */

@@ -13,7 +13,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../freertos_platform"
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../freertos/freertos_linux_lib"
                  "${CMAKE_BINARY_DIR}/freertos_linux_lib")
 
-add_executable(barectf_lttng_freertos_platform_test main.cpp console.cpp)
+add_executable(barectf_lttng_freertos_platform_test main.cpp)
 target_include_directories(barectf_lttng_freertos_platform_test
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(
