@@ -8,8 +8,8 @@ static BarectfUserTrace* userFunctionInstrumentTracePtr = nullptr;
 static bool isFunctionInstrumentReady() { return userFunctionInstrumentTracePtr != nullptr; }
 
 void __cyg_profile_func_enter(void* thisFunction, void* callSite) {
-    if (!isFunctionInstrumentReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
+    if (!isFunctionInstrumentReady()) { return; }
 
     BarectfThreadInfo threadInfo;
     // TODO: Check if this works for IRQ
@@ -25,8 +25,8 @@ void __cyg_profile_func_enter(void* thisFunction, void* callSite) {
 }
 
 void __cyg_profile_func_exit(void* thisFunction, void* callSite) {
-    if (!isFunctionInstrumentReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
+    if (!isFunctionInstrumentReady()) { return; }
 
     BarectfThreadInfo threadInfo;
     getCurrThreadInfo(threadInfo);

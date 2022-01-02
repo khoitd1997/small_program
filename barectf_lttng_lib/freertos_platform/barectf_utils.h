@@ -63,6 +63,8 @@ inline constexpr BarectfThreadInfo preSchdedulerStartThreadInfo{
 void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo);
 void getCurrThreadInfo(BarectfThreadInfo& threadInfo);
 
+// NOTE: FreeRTOS enter/exit critical are recursive so it should be good to call
+// it multiple times
 class FreeRTOSCriticalSectionGuard {
    public:
     FreeRTOSCriticalSectionGuard() __attribute__((no_instrument_function));

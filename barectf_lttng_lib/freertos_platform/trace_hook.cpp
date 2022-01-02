@@ -18,9 +18,9 @@ static TaskHandle_t prevTaskHandle = nullptr;
 bool isHookKernelTraceReady() { return hookKernelTrace != nullptr; }
 
 void taskSwitchedInHook(void* taskHandleVoidPtr) {
-    if (!isHookKernelTraceReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
-    TaskHandle_t                 nextTaskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
+    if (!isHookKernelTraceReady()) { return; }
+    TaskHandle_t nextTaskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
 
     BarectfThreadInfo prevTaskInfo;
     if (prevTaskHandle != nullptr) {
@@ -47,10 +47,11 @@ void taskSwitchedInHook(void* taskHandleVoidPtr) {
                                              nextTaskInfo.prio);
 }
 void taskSwitchedOutHook(void* taskHandleVoidPtr) {
+    FreeRTOSCriticalSectionGuard guard{};
+
     if (!isHookKernelTraceReady()) { return; }
 
-    FreeRTOSCriticalSectionGuard guard{};
-    TaskHandle_t                 taskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
+    TaskHandle_t taskHandle = static_cast<TaskHandle_t>(taskHandleVoidPtr);
 
     prevTaskHandle = taskHandle;
 }
@@ -95,8 +96,9 @@ bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize) {
     return true;
 }
 void traceHookFinish() {
-    if (!isHookKernelTraceReady()) { return; }
     FreeRTOSCriticalSectionGuard guard{};
+
+    if (!isHookKernelTraceReady()) { return; }
 
     hookKernelTrace->finish();
     delete hookKernelTrace;
