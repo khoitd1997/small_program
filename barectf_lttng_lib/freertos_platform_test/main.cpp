@@ -91,13 +91,10 @@ void vAssertCalled(const char* const pcFileName, unsigned long ulLine) {
     /* Called if an assertion passed to configASSERT() fails.  See
      * http://www.freertos.org/a00110.html#configASSERT for more information. */
 
-    /* Parameters are not used. */
-    (void)ulLine;
-    (void)pcFileName;
-
     taskENTER_CRITICAL();
     {
-        // TODO: Fill in with trace recording
+        std::cout << "Assert failed at " << pcFileName << " at line " << ulLine << std::endl;
+        std::exit(1);
     }
     taskEXIT_CRITICAL();
 }
