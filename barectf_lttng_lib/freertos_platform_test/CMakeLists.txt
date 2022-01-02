@@ -8,6 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(FREERTOS_CONFIG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# add_compile_options("-fsanitize=address")
+# add_link_options("-fsanitize=address")
+
+add_compile_options("-fsanitize=thread")
+add_link_options("-fsanitize=thread")
+
+add_compile_options("-fsanitize=undefined")
+add_link_options("-fsanitize=undefined")
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../lib"
                  "${CMAKE_BINARY_DIR}/barectf_lttng_lib")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../freertos_platform"

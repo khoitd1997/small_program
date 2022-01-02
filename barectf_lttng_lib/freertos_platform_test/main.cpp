@@ -297,7 +297,7 @@ void basicTask(void* pvParameters) {
     for (;;) {
         taskYIELD();
         ++counter;
-        if (counter >= 10) { break; }
+        if (counter >= 5) { break; }
     }
 
     --totalTestTask;
@@ -337,8 +337,6 @@ void basicTask(void* pvParameters) {
 #endif
         // seems to help with avoiding data corruption on exit
         // but it still seems to happen
-        system("sync");
-        vTaskDelay(pdMS_TO_TICKS(50));
 
         std::cout << "All task is done, exitting" << std::endl;
         std::exit(0);
