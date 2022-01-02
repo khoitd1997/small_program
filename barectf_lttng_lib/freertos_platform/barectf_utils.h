@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
 #include <limits>
-#include <string>
 
 #include "FreeRTOS.h"
 #include "task.h"

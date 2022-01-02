@@ -40,6 +40,7 @@
  */
 
 #include <errno.h>
+#include <link.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -229,8 +230,34 @@ static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(calloc(tr
 static constexpr unsigned int functionTraceBufSize = 1024 * 1024 * 5;
 static uint8_t* functionTraceBufAddr = static_cast<uint8_t*>(calloc(functionTraceBufSize, 1));
 
-#define ENABLE_FUNCTION_TRACE
+static std::string getCurrExePath() {
+    // readlink doesn't add null terminator so we have to do it ourselves
+    char currExeFilePath[100] = {0};
+    if (readlink("/proc/self/exe", currExeFilePath, std::size(currExeFilePath) - 1) < 0) {
+        throw std::runtime_error("Failed to read /proc/self/exe");
+    }
+    return currExeFilePath;
+}
+static int dlIterateCallback(dl_phdr_info* info, size_t size, void* data) {
+    BarectfExeInfo* exeInfo = static_cast<BarectfExeInfo*>(data);
+    std::string     objName = info->dlpi_name;
 
+    // not empty means it's not dl_phdr_info for the executable but rather
+    // for a dll
+    if (!objName.empty()) { return 0; }
+
+    exeInfo->name                  = getCurrExePath();
+    exeInfo->baseAddr              = info->dlpi_addr;
+    exeInfo->isPositionIndependent = true;
+
+    exeInfo->memSize = 0;
+    for (auto j = 0; j < info->dlpi_phnum; j++) { exeInfo->memSize += info->dlpi_phdr[j].p_memsz; }
+
+    return 0;
+}
+void barectfGetCurrExeInfo(BarectfExeInfo& info) { dl_iterate_phdr(dlIterateCallback, &info); }
+
+#define ENABLE_FUNCTION_TRACE
 #ifdef ENABLE_FUNCTION_TRACE
 static BarectfFunctionInstrument barectfFunctionInstrument(functionTraceBufAddr,
                                                            functionTraceBufSize);

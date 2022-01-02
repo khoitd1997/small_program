@@ -23,11 +23,6 @@
  * SOFTWARE.
  */
 
-#include <unistd.h>
-#include <cassert>
-#include <cstdint>
-#include <ctime>
-#include <iostream>
 #include <stdexcept>
 
 #include "barectf.h"
@@ -100,37 +95,6 @@ void BarectfUserTrace::closePacketCallback(void* const data) {
 }
 int BarectfUserTrace::isBackendFullCallback(void* const data) { return 0; }
 
-int BarectfUserTrace::dlIterateCallback(dl_phdr_info* info, size_t size, void* data) {
-    BarectfUserTrace* userTrace = static_cast<BarectfUserTrace*>(data);
-    BarectfThreadInfo threadInfo;
-    getCurrThreadInfo(threadInfo);
-    std::string objName = info->dlpi_name;
-    if (objName.empty()) { objName = getCurrExePath(); }
-
-    size_t objMemsz = 0;
-    for (auto j = 0; j < info->dlpi_phnum; j++) { objMemsz += info->dlpi_phdr[j].p_memsz; }
-
-    barectf_user_stream_trace_lttng_ust_statedump_bin_info(userTrace->getStreamCtxPtr(),
-                                                           FreeRtosFixedPid,
-                                                           threadInfo.tid,
-                                                           threadInfo.name,
-                                                           (uintptr_t)(info->dlpi_addr),
-                                                           objMemsz,
-                                                           objName.c_str(),
-                                                           true,
-                                                           false,
-                                                           false);
-
-    return 0;
-}
-std::string BarectfUserTrace::getCurrExePath() {
-    // readlink doesn't add null terminator so we have to do it ourselves
-    char currExeFilePath[100] = {0};
-    if (readlink("/proc/self/exe", currExeFilePath, std::size(currExeFilePath) - 1) < 0) {
-        throw std::runtime_error("Failed to read /proc/self/exe");
-    }
-    return currExeFilePath;
-}
 void BarectfUserTrace::doBasicStatedump() {
     // we only want one statedump ever, so make sure only one guy ever does it
     FreeRTOSCriticalSectionGuard lock{};
@@ -145,8 +109,22 @@ void BarectfUserTrace::doBasicStatedump() {
     barectf_user_stream_trace_lttng_ust_statedump_procname(
         &streamCtx, FreeRtosFixedPid, threadInfo.tid, threadInfo.name, threadInfo.name);
 
-    // TODO: Check how baremetal does this
-    dl_iterate_phdr(BarectfUserTrace::dlIterateCallback, this);
+    BarectfExeInfo exeInfo{};
+    barectfGetCurrExeInfo(exeInfo);
+    if (exeInfo.name.empty()) {
+        throw std::runtime_error("barectfGetCurrExeInfo didn't set info properly");
+    }
+
+    barectf_user_stream_trace_lttng_ust_statedump_bin_info(&streamCtx,
+                                                           FreeRtosFixedPid,
+                                                           threadInfo.tid,
+                                                           threadInfo.name,
+                                                           (uintptr_t)(exeInfo.baseAddr),
+                                                           exeInfo.memSize,
+                                                           exeInfo.name.c_str(),
+                                                           exeInfo.isPositionIndependent ? 1 : 0,
+                                                           false,
+                                                           false);
 
     barectf_user_stream_trace_lttng_ust_statedump_end(
         &streamCtx, FreeRtosFixedPid, threadInfo.tid, threadInfo.name);

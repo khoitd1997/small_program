@@ -1,6 +1,5 @@
 #include "barectf_utils.h"
 
-#include <unistd.h>
 #include <iostream>
 #include <stdexcept>
 

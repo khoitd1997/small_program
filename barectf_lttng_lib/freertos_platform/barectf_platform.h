@@ -23,18 +23,22 @@
  * SOFTWARE.
  */
 
-#include <link.h>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <string_view>
-
 #include "barectf.h"
 
 #pragma once
 
 inline uint32_t getCurrCpu() { return 0; }
+
+// NOTE: THIS NEED TO BE DEFINED BY USER
+struct BarectfExeInfo {
+    std::string name = "";
+    uint64_t    baseAddr;
+    uint64_t    memSize;
+
+    // should be true on Linux but probably would be false on bare metal
+    bool isPositionIndependent;
+};
+extern void barectfGetCurrExeInfo(BarectfExeInfo& info);
 
 // NOTE: Due to the nature of templates all functions in this class need to
 // be marked with __attribute__((no_instrument_function))
@@ -124,9 +128,6 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
     static void openPacketCallback(void* const data);
     static void closePacketCallback(void* const data);
     static int  isBackendFullCallback(void* const data);
-
-    static int         dlIterateCallback(dl_phdr_info* info, size_t size, void* data);
-    static std::string getCurrExePath();
 
     static bool isStatedumpDone;
 

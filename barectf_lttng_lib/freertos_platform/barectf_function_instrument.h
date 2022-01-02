@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdio.h>
 #include <string_view>
+
 #include "barectf_platform.h"
 
 // mark extern "C" so that compiler can find it
