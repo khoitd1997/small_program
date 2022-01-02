@@ -63,16 +63,25 @@ void getCurrThreadInfo(BarectfThreadInfo& threadInfo) {
     getThreadInfo(xTaskGetCurrentTaskHandle(), threadInfo);
 }
 
+#ifdef __linux
 #include <mutex>
 static std::recursive_mutex criticalSectionMutex;
+#endif
 
-// NOTE: the taskENTER_CRITICAL on Linux at least seems to mess with function tracing
-// and cause corruption in user stream trace file
+// NOTE: the taskENTER_CRITICAL port on Linux doesn't seem to work super well since
+// other tasks can still be run when we are in a critical section
+// so use mutex when on Linux
 FreeRTOSCriticalSectionGuard::FreeRTOSCriticalSectionGuard() {
+#ifdef __linux
     criticalSectionMutex.lock();
-    // taskENTER_CRITICAL();
+#else
+    taskENTER_CRITICAL();
+#endif
 }
 FreeRTOSCriticalSectionGuard::~FreeRTOSCriticalSectionGuard() {
-    // taskEXIT_CRITICAL();
+#ifdef __linux
     criticalSectionMutex.unlock();
+#else
+    taskEXIT_CRITICAL();
+#endif
 }
