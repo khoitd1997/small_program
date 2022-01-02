@@ -83,9 +83,7 @@ void vAssertCalled(const char* const pcFileName, unsigned long ulLine) {
     (void)pcFileName;
 
     taskENTER_CRITICAL();
-    {
-        // TODO: Fill in with trace recording
-    }
+    {}
     taskEXIT_CRITICAL();
 }
 

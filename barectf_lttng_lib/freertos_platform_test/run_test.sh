@@ -32,9 +32,9 @@ export TRACE_ROOT_DIR="${trace_dir}"
 
 echo "Reading trace using babeltrace"
 
-# echo "------------------KERNEL TRACE-------------------------"
-# babeltrace2 "${kernel_trace_dir}"
-# echo ""
+echo "------------------KERNEL TRACE-------------------------"
+babeltrace2 "${kernel_trace_dir}"
+echo ""
 
 echo "------------------USER TRACE-------------------------"
 babeltrace2 "${user_trace_dir}"

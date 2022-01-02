@@ -82,9 +82,6 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
     bool init(uint8_t* bufAddr, const unsigned int bufSize);
     void finish();
 
-    void openPacket();
-    void closePacket();
-
    private:
     static void openPacketCallback(void* const data);
     static void closePacketCallback(void* const data);
@@ -96,28 +93,14 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
         .open_packet             = openPacketCallback,
         .close_packet            = closePacketCallback,
     };
-};
-class BarectfKernelTraceGuard {
-   public:
-    inline BarectfKernelTraceGuard(BarectfKernelTrace& trace) : myTrace{trace} {
-        myTrace.openPacket();
-    }
-    inline ~BarectfKernelTraceGuard() { myTrace.closePacket(); }
 
-   private:
-    BarectfKernelTrace& myTrace;
+    void openPacket();
+    void closePacket();
 };
-
 class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx> {
    public:
     bool init(uint8_t* bufAddr, const unsigned int bufSize);
     void finish();
-
-    // TODO: Decide in the future if we want to also open packet in init instead
-    // seems like for most usecase, we will technically only have one packet for
-    // the entire tracing session so it makes more sense to open it in init
-    void openPacket();
-    void closePacket();
 
     // user tracing in lttng/trace compass requires having state dump packets before
     // doing any other kind of events, this command takes care of creating very basic
@@ -137,12 +120,7 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
         .open_packet             = openPacketCallback,
         .close_packet            = closePacketCallback,
     };
-};
-class BarectfUserTraceGuard {
-   public:
-    inline BarectfUserTraceGuard(BarectfUserTrace& trace) : myTrace{trace} { myTrace.openPacket(); }
-    inline ~BarectfUserTraceGuard() { myTrace.closePacket(); }
 
-   private:
-    BarectfUserTrace& myTrace;
+    void openPacket();
+    void closePacket();
 };

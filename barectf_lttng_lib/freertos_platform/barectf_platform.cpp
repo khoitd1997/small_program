@@ -35,6 +35,7 @@ bool BarectfKernelTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
     BarectfBaseTrace::init(bufAddr, bufSize);
 
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
+    openPacket();
 
     return true;
 }
@@ -70,6 +71,7 @@ bool BarectfUserTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
     BarectfBaseTrace::init(bufAddr, bufSize);
 
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
+    openPacket();
 
     return true;
 }

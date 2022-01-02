@@ -76,7 +76,6 @@ bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize) {
         throw std::runtime_error("failed to initialize hookKernelTrace");
         return false;
     }
-    hookKernelTrace->openPacket();
 
     BarectfThreadInfo prevTaskInfo = {
         .tid = -1, .prio = 0, .state = EXIT_DEAD, .name = "Invalid Task"};
