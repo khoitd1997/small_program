@@ -6,6 +6,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+set(FREERTOS_CONFIG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../lib"
                  "${CMAKE_BINARY_DIR}/barectf_lttng_lib")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../freertos_platform"

@@ -56,6 +56,11 @@ if(DEFINED TRACE_HOOK_MACRO_INCLUDE_DIR)
   set(include_dirs ${include_dirs} "${TRACE_HOOK_MACRO_INCLUDE_DIR}")
 endif()
 
+if(NOT DEFINED FREERTOS_CONFIG_INCLUDE_DIR)
+  message(FATAL_ERROR "FREERTOS_CONFIG_INCLUDE_DIR must be defined")
+endif()
+set(include_dirs ${include_dirs} "${FREERTOS_CONFIG_INCLUDE_DIR}")
+
 target_include_directories(freertos_lib PUBLIC ${include_dirs})
 target_compile_definitions(freertos_lib PUBLIC ${compile_definitions})
 target_link_libraries(freertos_lib PUBLIC pthread)

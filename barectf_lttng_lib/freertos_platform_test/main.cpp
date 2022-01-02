@@ -226,7 +226,8 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 }
 }
 
-std::atomic_int totalTestTask = 0;
+std::atomic_int  totalTestTask   = 3;
+constexpr size_t TASK_STACK_SIZE = 5 * 1024 * 1024;
 
 BarectfUserTrace   userTrace;
 BarectfKernelTrace kernelTrace;
@@ -385,21 +386,14 @@ int main(void) {
     }
 #endif
 
-    if (pdPASS != xTaskCreate(basicTask, "task_1", 4048, nullptr, 2, nullptr)) {
-        std::cout << "Failed to create task_1" << std::endl;
-        return -1;
+    for (auto i = 0; i < totalTestTask; ++i) {
+        const std::string taskName = std::string{"task_"} + std::to_string(i);
+        if (pdPASS !=
+            xTaskCreate(basicTask, taskName.c_str(), TASK_STACK_SIZE, nullptr, 2, nullptr)) {
+            std::cout << "Failed to create task " << taskName << std::endl;
+            return -1;
+        }
     }
-    ++totalTestTask;
-    if (pdPASS != xTaskCreate(basicTask, "task_2", 4048, nullptr, 2, nullptr)) {
-        std::cout << "Failed to create task_2" << std::endl;
-        return -1;
-    }
-    ++totalTestTask;
-    if (pdPASS != xTaskCreate(basicTask, "task_3", 4048, nullptr, 2, nullptr)) {
-        std::cout << "Failed to create task_3" << std::endl;
-        return -1;
-    }
-    ++totalTestTask;
 
     std::cout << "Done with main\n";
 
