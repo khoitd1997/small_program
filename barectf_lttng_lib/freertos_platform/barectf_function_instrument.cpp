@@ -46,7 +46,6 @@ BarectfFunctionInstrument::BarectfFunctionInstrument(uint8_t* bufAddr, const uns
     if (!userFunctionInstrumentTrace.init(bufAddr, bufSize)) {
         throw std::runtime_error("Failed to initialize function instrument");
     }
-    userFunctionInstrumentTrace.doBasicStatedump();
 
     // we shouldn't be ready at this time unless we are instantiating more than one instance
     // of BarectfFunctionInstrument which should not be done

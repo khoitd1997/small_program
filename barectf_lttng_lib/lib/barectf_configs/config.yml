@@ -37,6 +37,20 @@ trace:
           TASK_NOLOAD: [1024]
           TASK_NEW: [2048]
           TASK_STATE_MAX: [4096]
+
+      # NOTE: add more to these to make new msg ID
+      # enums for these are not automatically generated
+      # so you need to duplicate it in some source files
+      custom_user_event_id:
+        class: signed-enumeration
+        size: 64
+        mappings:
+          USER_DEBUG_MSG: [0]
+      custom_kernel_event_id:
+        class: signed-enumeration
+        size: 64
+        mappings:
+          KERNEL_DEBUG_MSG: [0]
       
       user_stream_context:
         class: structure
@@ -70,6 +84,20 @@ trace:
           - cpu_id: uint32
 
         event-record-types:
+          # used for general purpose, ie print style logging
+          custom_event:
+            payload-field-type:
+              class: structure
+              members:
+                - id: custom_kernel_event_id
+                - content: string
+          # used when you don't want overhead and just want to log a number
+          custom_event_int:
+            payload-field-type:
+              class: structure
+              members:
+                - content: byte-packed-int64
+
           sched_switch:
             payload-field-type:
               class: structure
@@ -165,6 +193,18 @@ trace:
         event-record-common-context-field-type: user_stream_context
 
         event-record-types:
+          custom_event:
+            payload-field-type:
+              class: structure
+              members:
+                - id: custom_user_event_id
+                - content: string
+          custom_event_int:
+            payload-field-type:
+              class: structure
+              members:
+                - content: byte-packed-int64
+
           lttng_ust_statedump_start:
             payload-field-type:
               class: structure

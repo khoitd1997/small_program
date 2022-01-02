@@ -39,10 +39,9 @@ bool BarectfKernelTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
 
     return true;
 }
-void BarectfKernelTrace::finish() {
+void BarectfKernelTrace::finish(bool* isEmpty) {
+    if (isEmpty) { *isEmpty = barectf_packet_is_empty(&streamCtx); }
     closePacket();
-
-    BarectfBaseTrace::finish();
 }
 
 void BarectfKernelTrace::openPacket() {
@@ -73,12 +72,13 @@ bool BarectfUserTrace::init(uint8_t* bufAddr, const unsigned int bufSize) {
     barectf_init(&streamCtx, traceBuffer, bufSize, barectfCallback, this);
     openPacket();
 
+    doBasicStatedump();
+
     return true;
 }
-void BarectfUserTrace::finish() {
+void BarectfUserTrace::finish(bool* isEmpty) {
+    if (isEmpty) { *isEmpty = barectf_packet_is_empty(&streamCtx); }
     closePacket();
-
-    BarectfBaseTrace::finish();
 }
 void BarectfUserTrace::openPacket() { barectf_user_stream_open_packet(&streamCtx, getCurrCpu()); }
 void BarectfUserTrace::closePacket() {

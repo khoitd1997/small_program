@@ -27,9 +27,6 @@
 
 #pragma once
 
-inline uint32_t getCurrCpu() { return 0; }
-
-// NOTE: THIS NEED TO BE DEFINED BY USER
 struct BarectfExeInfo {
     std::string name = "";
     uint64_t    baseAddr;
@@ -38,6 +35,7 @@ struct BarectfExeInfo {
     // should be true on Linux but probably would be false on bare metal
     bool isPositionIndependent;
 };
+// NOTE: THIS NEED TO BE DEFINED BY USER
 extern void barectfGetCurrExeInfo(BarectfExeInfo& info);
 
 // NOTE: Due to the nature of templates all functions in this class need to
@@ -57,7 +55,6 @@ class BarectfBaseTrace {
         traceBuffer  = bufAddr;
         traceBufSize = bufSize;
     }
-    virtual void finish() __attribute__((no_instrument_function)) {}
 
     virtual ~BarectfBaseTrace() {}
 
@@ -77,10 +74,31 @@ class BarectfBaseTrace {
     T streamCtx = {};
 };
 
+/**
+ * @brief These objects(both user and kernel trace) ARE NOT THREAD SAFE so if they are to be used
+ * by multiple threads must have some kind of protections
+ *
+ * However, the recommended usage by barectf is for each thread to create their own trace
+ * so that they don't have to synchronize with each other. As long as the resulting traces
+ * are placed into the same directory after collection, babeltrace/trace_compass will read them as
+ * one trace and the only difference is that they will have different name showing in
+ * the channel field of the events
+ *
+ * Usage: Check the platform test for example on how to use, these classes mostly serve as nice
+ * wrapper for setting up/tearing down, but when you need to log tracepoints,
+ * use the functions defined barectf.h
+ *
+ */
 class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream_ctx> {
    public:
     bool init(uint8_t* bufAddr, const unsigned int bufSize);
-    void finish();
+    /**
+     * call this when you are done tracing
+     * @param isEmpty optional param to check if the packet is empty when closing
+     * helpful for deciding whether you should write the trace to file since empty trace seems
+     * to confuse trace readers
+     */
+    void finish(bool* isEmpty = nullptr);
 
    private:
     static void openPacketCallback(void* const data);
@@ -100,12 +118,13 @@ class BarectfKernelTrace : virtual public BarectfBaseTrace<barectf_kernel_stream
 class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx> {
    public:
     bool init(uint8_t* bufAddr, const unsigned int bufSize);
-    void finish();
-
-    // user tracing in lttng/trace compass requires having state dump packets before
-    // doing any other kind of events, this command takes care of creating very basic
-    // statedump packets for that
-    void doBasicStatedump();
+    /**
+     * call this when you are done tracing
+     * @param isEmpty optional param to check if the packet is empty when closing
+     * helpful for deciding whether you should write the trace to file since empty trace seems
+     * to confuse trace readers
+     */
+    void finish(bool* isEmpty = nullptr);
 
    private:
     static void openPacketCallback(void* const data);
@@ -123,4 +142,9 @@ class BarectfUserTrace : virtual public BarectfBaseTrace<barectf_user_stream_ctx
 
     void openPacket();
     void closePacket();
+
+    // user tracing in lttng/trace compass requires having state dump packets before
+    // doing any other kind of events, this command takes care of creating very basic
+    // statedump packets for that
+    void doBasicStatedump();
 };

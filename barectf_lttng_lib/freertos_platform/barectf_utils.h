@@ -30,6 +30,14 @@ enum BarectfTaskState : int64_t {
     TASK_STATE_MAX = 4096,
 };
 
+// needs to match with config.yml
+enum BarectfCustomUserEventId : int64_t {
+    USER_DEBUG_MSG = 0,
+};
+enum BarectfCustomKernelEventId : int64_t {
+    KERNEL_DEBUG_MSG = 0,
+};
+
 struct BarectfThreadInfo {
     int32_t tid;
 
@@ -67,3 +75,6 @@ class FreeRTOSCriticalSectionGuard {
     FreeRTOSCriticalSectionGuard() __attribute__((no_instrument_function));
     ~FreeRTOSCriticalSectionGuard() __attribute__((no_instrument_function));
 };
+
+// freeRTOS mostly only support one CPU so we just return a hardcoded number
+inline uint32_t getCurrCpu() { return 0; }
