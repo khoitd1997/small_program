@@ -59,6 +59,10 @@
 
 #include "barectf_utils.h"
 
+#define ENABLE_FUNCTION_TRACE
+#define ENABLE_USER_TRACE
+#define ENABLE_KERNEL_TRACE
+
 inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
 inline std::string getDefaultKernelTraceDir() {
     return getDefaultTraceRootDir() + "/barectf_kernel_trace";
@@ -224,6 +228,19 @@ void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
 
 std::atomic_int totalTestTask = 0;
 
+BarectfUserTrace   userTrace;
+BarectfKernelTrace kernelTrace;
+
+#ifdef ENABLE_KERNEL_TRACE
+static constexpr unsigned int kernelTraceBufSize = 1024 * 1024 * 5;
+static uint8_t* kernelTraceBufAddr = static_cast<uint8_t*>(calloc(kernelTraceBufSize, 1));
+#endif
+
+#ifdef ENABLE_USER_TRACE
+static constexpr unsigned int userTraceBufSize = 1024 * 1024 * 5;
+static uint8_t*               userTraceBufAddr = static_cast<uint8_t*>(calloc(userTraceBufSize, 1));
+#endif
+
 static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
 static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(calloc(traceHookBufSize, 1));
 
@@ -257,7 +274,6 @@ static int dlIterateCallback(dl_phdr_info* info, size_t size, void* data) {
 }
 void barectfGetCurrExeInfo(BarectfExeInfo& info) { dl_iterate_phdr(dlIterateCallback, &info); }
 
-#define ENABLE_FUNCTION_TRACE
 #ifdef ENABLE_FUNCTION_TRACE
 static BarectfFunctionInstrument barectfFunctionInstrument(functionTraceBufAddr,
                                                            functionTraceBufSize);
@@ -286,19 +302,43 @@ void basicTask(void* pvParameters) {
     --totalTestTask;
     if (totalTestTask == 0) {
         std::cout << "Initiating Exit" << std::endl;
+        bool isEmpty;
         // vTaskDelay(pdMS_TO_TICKS(100));
+
         traceHookFinish();
-#ifdef ENABLE_FUNCTION_TRACE
-        barectfFunctionInstrument.finish();
+        writeTraceToFile(traceHookBufAddr,
+                         traceHookBufSize,
+                         getDefaultKernelTraceDir() + "/freeRTOS_kernel_trace_hook");
+
+#ifdef ENABLE_KERNEL_TRACE
+        kernelTrace.finish(&isEmpty);
+        if (!isEmpty) {
+            writeTraceToFile(kernelTraceBufAddr,
+                             kernelTraceBufSize,
+                             getDefaultKernelTraceDir() + "/kernel_trace");
+        }
 #endif
 
-        writeTraceToFile(
-            traceHookBufAddr, traceHookBufSize, getDefaultKernelTraceDir() + "/trace_hook_stream");
+#ifdef ENABLE_USER_TRACE
+        userTrace.finish(&isEmpty);
+        if (!isEmpty) {
+            writeTraceToFile(
+                userTraceBufAddr, userTraceBufSize, getDefaultUserTraceDir() + "/user_trace");
+        }
+#endif
+
 #ifdef ENABLE_FUNCTION_TRACE
+        barectfFunctionInstrument.finish();
         writeTraceToFile(functionTraceBufAddr,
                          functionTraceBufSize,
                          getDefaultUserTraceDir() + "/function_instrument_trace");
+
 #endif
+        // seems to help with avoiding data corruption on exit
+        // but it still seems to happen
+        system("sync");
+        vTaskDelay(pdMS_TO_TICKS(50));
+
         std::cout << "All task is done, exitting" << std::endl;
         std::exit(0);
     }
@@ -312,6 +352,38 @@ int main(void) {
         std::cout << "Failed traceHookInit" << std::endl;
         return -1;
     }
+
+#ifdef ENABLE_USER_TRACE
+    {
+        BarectfThreadInfo threadInfo;
+        getCurrThreadInfo(threadInfo);
+
+        if (!userTrace.init(userTraceBufAddr, userTraceBufSize)) {
+            std::cout << "Failed userTrace init" << std::endl;
+            return -1;
+        }
+        barectf_user_stream_trace_custom_event(userTrace.getStreamCtxPtr(),
+                                               FreeRtosFixedPid,
+                                               threadInfo.tid,
+                                               threadInfo.name,
+                                               USER_DEBUG_MSG,
+                                               "This is User MSG");
+        barectf_user_stream_trace_custom_event_int(
+            userTrace.getStreamCtxPtr(), FreeRtosFixedPid, threadInfo.tid, threadInfo.name, 45);
+    }
+#endif
+
+#ifdef ENABLE_KERNEL_TRACE
+    {
+        if (!kernelTrace.init(kernelTraceBufAddr, kernelTraceBufSize)) {
+            std::cout << "Failed kernelTrace init" << std::endl;
+            return -1;
+        }
+        barectf_kernel_stream_trace_custom_event(
+            kernelTrace.getStreamCtxPtr(), KERNEL_DEBUG_MSG, "This is Kernel MSG");
+        barectf_kernel_stream_trace_custom_event_int(kernelTrace.getStreamCtxPtr(), 42);
+    }
+#endif
 
     if (pdPASS != xTaskCreate(basicTask, "task_1", 4048, nullptr, 2, nullptr)) {
         std::cout << "Failed to create task_1" << std::endl;
