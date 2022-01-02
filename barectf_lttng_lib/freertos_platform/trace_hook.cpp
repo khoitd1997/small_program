@@ -79,6 +79,19 @@ bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize) {
     }
     hookKernelTrace->openPacket();
 
+    BarectfThreadInfo prevTaskInfo = {
+        .tid = -1, .prio = 0, .state = EXIT_DEAD, .name = "Invalid Task"};
+
+    barectf_kernel_stream_trace_sched_switch(hookKernelTrace->getStreamCtxPtr(),
+                                             prevTaskInfo.name,
+                                             prevTaskInfo.tid,
+                                             prevTaskInfo.prio,
+                                             prevTaskInfo.state,
+
+                                             preSchdedulerStartThreadInfo.name,
+                                             preSchdedulerStartThreadInfo.tid,
+                                             preSchdedulerStartThreadInfo.prio);
+
     return true;
 }
 void traceHookFinish() {

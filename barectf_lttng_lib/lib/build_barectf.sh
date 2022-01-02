@@ -27,8 +27,8 @@ done
 generated_kernel_meta_dir="${build_dir}/generated_kernel_trace_metadata"
 generated_user_meta_dir="${build_dir}/generated_user_trace_metadata"
 generated_src_dir="${build_dir}/barectf_generated_src"
-kernel_trace_dir="${trace_root_dir}/kernel_trace"
-user_trace_dir="${trace_root_dir}/user_trace"
+kernel_trace_dir="${trace_root_dir}/barectf_kernel_trace"
+user_trace_dir="${trace_root_dir}/barectf_user_trace"
 
 rm -rf "${generated_kernel_meta_dir}" \
        "${generated_user_meta_dir}" \

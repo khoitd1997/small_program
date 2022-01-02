@@ -5,8 +5,8 @@ set -e
 script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 build_dir="${script_dir}/build"
 trace_dir="${script_dir}/trace"
-kernel_trace_dir="${trace_dir}/kernel_trace"
-user_trace_dir="${trace_dir}/user_trace"
+kernel_trace_dir="${trace_dir}/barectf_kernel_trace"
+user_trace_dir="${trace_dir}/barectf_user_trace"
 
 mkdir -p "${trace_dir}" "${user_trace_dir}" "${kernel_trace_dir}"
 find "${kernel_trace_dir}" ! -name 'metadata' -type f -exec rm -f {} +

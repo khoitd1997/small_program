@@ -60,8 +60,12 @@
 #include "barectf_utils.h"
 
 inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
-inline std::string getDefaultKernelTraceDir() { return getDefaultTraceRootDir() + "/kernel_trace"; }
-inline std::string getDefaultUserTraceDir() { return getDefaultTraceRootDir() + "/user_trace"; }
+inline std::string getDefaultKernelTraceDir() {
+    return getDefaultTraceRootDir() + "/barectf_kernel_trace";
+}
+inline std::string getDefaultUserTraceDir() {
+    return getDefaultTraceRootDir() + "/barectf_user_trace";
+}
 
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
 

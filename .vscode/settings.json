@@ -51,7 +51,7 @@
         "iostream": "cpp",
         "*.json": "jsonc",
         "memory": "cpp",
-        "metadata": "cpp",
+        "metadata": "plaintext",
         "atomic": "cpp",
         "bit": "cpp",
         "cmath": "cpp",

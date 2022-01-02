@@ -77,5 +77,7 @@
 //     FREERTOS_TASK_NOTIFY_GIVE_FROM_ISR,
 // } stm_trace_events;
 
+// NOTE: This function also inserts an event to mark the start of the Pre_Scheduler_Task task
+// defined in barectf_utils.h
 bool traceHookInit(uint8_t* bufAddr, const unsigned int bufSize);
 void traceHookFinish();
