@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-add_executable(trace_splitter_test trace_splitter_test_main.cpp)
-target_link_libraries(trace_splitter_test PUBLIC babeltrace-ctf babeltrace)
-target_compile_options(trace_splitter_test PUBLIC -g -Wall)
+add_library(trace_splitter_lib trace_splitter.cpp)
+target_compile_options(trace_splitter_lib PUBLIC -g -Wall)
+target_include_directories(trace_splitter_lib
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

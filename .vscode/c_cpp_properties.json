@@ -18,6 +18,14 @@
             "cppStandard": "c++17",
             "cStandard": "c99",
             "compileCommands": "${workspaceFolder}/barectf_lttng_lib/freertos_platform_test/build/compile_commands.json"
+        },
+        {
+            "name": "trace_splitter_test",
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cppStandard": "c++17",
+            "cStandard": "c99",
+            "compileCommands": "${workspaceFolder}/barectf_lttng_lib/trace_splitter_test/build/compile_commands.json"
         }
     ],
     "version": 4
