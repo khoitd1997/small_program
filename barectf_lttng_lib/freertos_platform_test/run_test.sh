@@ -7,13 +7,16 @@ script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 build_dir="${script_dir}/build"
 trace_dir="${script_dir}/trace"
 kernel_trace_dir="${trace_dir}/barectf_kernel_trace"
+kernel_bundled_trace_dir="${trace_dir}/barectf_bundled_kernel_trace"
 user_trace_dir="${trace_dir}/barectf_user_trace"
+user_bundled_trace_dir="${trace_dir}/barectf_bundled_user_trace"
 src_dir="${script_dir}"
 
 # rm -rf "${trace_dir}"
 # NOTE: It's very important to remove the previous traces, seem like without proper removal,
 # the later traces are corrupted
-mkdir -p "${trace_dir}" "${user_trace_dir}" "${kernel_trace_dir}"
+rm -rf "${kernel_bundled_trace_dir}" "${user_bundled_trace_dir}"
+mkdir -p "${trace_dir}" "${user_trace_dir}" "${kernel_trace_dir}" "${kernel_bundled_trace_dir}" "${user_bundled_trace_dir}"
 find "${kernel_trace_dir}" ! -name 'metadata' -type f -exec rm -f {} +
 find "${user_trace_dir}" ! -name 'metadata' -type f -exec rm -f {} +
 sync
@@ -24,9 +27,14 @@ cd "${build_dir}"
 cmake -G "Ninja" -DTRACE_ROOT_DIR="${trace_dir}" -DCMAKE_BUILD_TYPE=Debug "${src_dir}" && cmake --build .
 # cmake -G "Ninja" -DTRACE_ROOT_DIR="${trace_dir}" -DCMAKE_BUILD_TYPE=Release "${src_dir}" && cmake --build .
 
+cp "${kernel_trace_dir}/metadata" "${kernel_bundled_trace_dir}"
+cp "${user_trace_dir}/metadata" "${user_bundled_trace_dir}"
+
 # gdb ./fbarectf_lttng_freertos_platform_test
+set +e
 export TRACE_ROOT_DIR="${trace_dir}"
 ./barectf_lttng_freertos_platform_test
+set -e
 # sleep 1
 # gdb ./barectf_lttng_freertos_platform_test
 

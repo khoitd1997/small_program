@@ -60,15 +60,19 @@
 #include "barectf_utils.h"
 
 #define ENABLE_FUNCTION_TRACE
-#define ENABLE_USER_TRACE
-#define ENABLE_KERNEL_TRACE
 
 inline std::string getDefaultTraceRootDir() { return std::getenv("TRACE_ROOT_DIR"); }
 inline std::string getDefaultKernelTraceDir() {
     return getDefaultTraceRootDir() + "/barectf_kernel_trace";
 }
+inline std::string getDefaultKernelBundledTraceDir() {
+    return getDefaultTraceRootDir() + "/barectf_bundled_kernel_trace";
+}
 inline std::string getDefaultUserTraceDir() {
     return getDefaultTraceRootDir() + "/barectf_user_trace";
+}
+inline std::string getDefaultUserBundledTraceDir() {
+    return getDefaultTraceRootDir() + "/barectf_bundled_user_trace";
 }
 
 /* This demo uses heap_3.c (the libc provided malloc() and free()). */
@@ -232,21 +236,22 @@ constexpr size_t TASK_STACK_SIZE = 5 * 1024 * 1024;
 BarectfUserTrace   userTrace;
 BarectfKernelTrace kernelTrace;
 
-#ifdef ENABLE_KERNEL_TRACE
-static constexpr unsigned int kernelTraceBufSize = 1024 * 1024 * 5;
-static uint8_t* kernelTraceBufAddr = static_cast<uint8_t*>(calloc(kernelTraceBufSize, 1));
-#endif
+static constexpr unsigned int kernelTraceBufSize        = 1024 * 1024 * 5;
+static constexpr unsigned int traceHookBufSize          = 1024 * 1024 * 4;
+static constexpr unsigned int kernelBundledTraceBufSize = kernelTraceBufSize + traceHookBufSize;
 
-#ifdef ENABLE_USER_TRACE
-static constexpr unsigned int userTraceBufSize = 1024 * 1024 * 5;
-static uint8_t*               userTraceBufAddr = static_cast<uint8_t*>(calloc(userTraceBufSize, 1));
-#endif
+static uint8_t* kernelBundledTraceBufAddr =
+    static_cast<uint8_t*>(calloc(kernelBundledTraceBufSize, 1));
+static uint8_t* kernelTraceBufAddr = kernelBundledTraceBufAddr;
+static uint8_t* traceHookBufAddr   = kernelBundledTraceBufAddr + kernelTraceBufSize;
 
-static constexpr unsigned int traceHookBufSize = 1024 * 1024 * 5;
-static uint8_t*               traceHookBufAddr = static_cast<uint8_t*>(calloc(traceHookBufSize, 1));
+static constexpr unsigned int userTraceBufSize        = 1024 * 1024 * 6;
+static constexpr unsigned int functionTraceBufSize    = 1024 * 1024 * 7;
+static constexpr unsigned int userBundledTraceBufSize = userTraceBufSize + functionTraceBufSize;
 
-static constexpr unsigned int functionTraceBufSize = 1024 * 1024 * 5;
-static uint8_t* functionTraceBufAddr = static_cast<uint8_t*>(calloc(functionTraceBufSize, 1));
+static uint8_t* userBundledTraceBufAddr = static_cast<uint8_t*>(calloc(userBundledTraceBufSize, 1));
+static uint8_t* userTraceBufAddr        = userBundledTraceBufAddr;
+static uint8_t* functionTraceBufAddr    = userBundledTraceBufAddr + userTraceBufSize;
 
 static std::string getCurrExePath() {
     // readlink doesn't add null terminator so we have to do it ourselves
@@ -311,22 +316,22 @@ void basicTask(void* pvParameters) {
                          traceHookBufSize,
                          getDefaultKernelTraceDir() + "/freeRTOS_kernel_trace_hook");
 
-#ifdef ENABLE_KERNEL_TRACE
         kernelTrace.finish(&isEmpty);
         if (!isEmpty) {
             writeTraceToFile(kernelTraceBufAddr,
                              kernelTraceBufSize,
                              getDefaultKernelTraceDir() + "/kernel_trace");
         }
-#endif
 
-#ifdef ENABLE_USER_TRACE
+        writeTraceToFile(kernelBundledTraceBufAddr,
+                         kernelBundledTraceBufSize,
+                         getDefaultKernelBundledTraceDir() + "/bundled_trace");
+
         userTrace.finish(&isEmpty);
         if (!isEmpty) {
             writeTraceToFile(
                 userTraceBufAddr, userTraceBufSize, getDefaultUserTraceDir() + "/user_trace");
         }
-#endif
 
 #ifdef ENABLE_FUNCTION_TRACE
         barectfFunctionInstrument.finish();
@@ -335,8 +340,10 @@ void basicTask(void* pvParameters) {
                          getDefaultUserTraceDir() + "/function_instrument_trace");
 
 #endif
-        // seems to help with avoiding data corruption on exit
-        // but it still seems to happen
+
+        writeTraceToFile(userBundledTraceBufAddr,
+                         userBundledTraceBufSize,
+                         getDefaultUserBundledTraceDir() + "/bundled_trace");
 
         std::cout << "All task is done, exitting" << std::endl;
         std::exit(0);
@@ -352,7 +359,6 @@ int main(void) {
         return -1;
     }
 
-#ifdef ENABLE_USER_TRACE
     {
         BarectfThreadInfo threadInfo;
         getCurrThreadInfo(threadInfo);
@@ -370,9 +376,6 @@ int main(void) {
         barectf_user_stream_trace_custom_event_int(
             userTrace.getStreamCtxPtr(), FreeRtosFixedPid, threadInfo.tid, threadInfo.name, 45);
     }
-#endif
-
-#ifdef ENABLE_KERNEL_TRACE
     {
         if (!kernelTrace.init(kernelTraceBufAddr, kernelTraceBufSize)) {
             std::cout << "Failed kernelTrace init" << std::endl;
@@ -382,8 +385,6 @@ int main(void) {
             kernelTrace.getStreamCtxPtr(), KERNEL_DEBUG_MSG, "This is Kernel MSG");
         barectf_kernel_stream_trace_custom_event_int(kernelTrace.getStreamCtxPtr(), 42);
     }
-#endif
-
     for (auto i = 0; i < totalTestTask; ++i) {
         const std::string taskName = std::string{"task_"} + std::to_string(i);
         if (pdPASS !=
