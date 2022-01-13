@@ -1,0 +1,6 @@
+{
+    "liveServer.settings.root": "/perf_graph",
+    "liveServer.settings.donotShowInfoMsg": true,
+    "liveServer.settings.file": "/example-perf.svg",
+    "liveServer.settings.port": 5501
+}
