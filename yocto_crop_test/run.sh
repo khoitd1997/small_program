@@ -16,5 +16,6 @@ sudo docker build -t yocto_build_container .
 sudo docker run --rm -it \
     -v "${workdir}":/workdir \
     -v "${scripts_dir}":/scripts \
+    -v /tools:/tools \
     --workdir=/workdir \
     yocto_build_container "/scripts/build_yocto.sh"

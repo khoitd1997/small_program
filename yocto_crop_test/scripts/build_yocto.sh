@@ -12,6 +12,8 @@ git clone https://github.com/khoitd1997/yocto_test.git
 cd yocto_test
 git submodule init
 git submodule update
-./build_all_config.sh
+# ./build_all_config.sh
+./set_build_config.sh debug
+./build.sh
 
 echo "Yocto Build is Finished"
