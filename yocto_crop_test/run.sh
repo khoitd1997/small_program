@@ -13,4 +13,8 @@ mkdir -p "${workdir}"
 # so we have to extend it a bit and then build our own
 sudo docker build -t yocto_build_container .
 
-sudo docker run --rm -it -v "${workdir}":/workdir -v "${scripts_dir}":/scripts yocto_build_container --workdir=/workdir "/scripts/build_yocto.sh"
+sudo docker run --rm -it \
+    -v "${workdir}":/workdir \
+    -v "${scripts_dir}":/scripts \
+    --workdir=/workdir \
+    yocto_build_container "/scripts/build_yocto.sh"
