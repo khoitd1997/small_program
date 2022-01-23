@@ -7,27 +7,45 @@
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
+vm_box = "ubuntu/focal64"
+vm_ram = 16384
+vm_cpus = 8
+install_apt_pkg = 'apt update && apt full-upgrade -y && apt install xxd build-essential datamash gawk wget git-core diffstat unzip texinfo gcc-multilib build-essential chrpath socat libsdl1.2-dev xterm python3 tar libtinfo5 -y'
 Vagrant.configure('2') do |config|
     unless Vagrant.has_plugin?("vagrant-disksize")
         raise  Vagrant::Errors::VagrantError.new, "vagrant-disksize plugin is missing. Please install it using 'vagrant plugin install vagrant-disksize' and rerun 'vagrant up'"
     end
 
-    config.vm.box = "ubuntu/focal64"
-    config.disksize.size = '250GB'
+    config.vm.define "without_vitis" do |wv|
+        wv.vm.box = vm_box
+        wv.vm.hostname = 'without-vitis'
+        wv.disksize.size = '70GB'
 
-    MEMORY = 16384
-    CPUS = 8
+        wv.vm.synced_folder 'vagrant_mount', '/vagrant_mount'
+        wv.vm.synced_folder 'scripts', '/scripts'
 
-    config.vm.provider :virtualbox do |v|
-        v.memory = MEMORY
-        v.cpus = CPUS
+        wv.vm.provider :virtualbox do |v|
+            v.memory = vm_ram
+            v.cpus = vm_cpus
+        end
+
+        wv.vm.provision 'shell', inline: install_apt_pkg
     end
 
-    config.vm.synced_folder 'vagrant_mount', '/vagrant_mount'
-    config.vm.synced_folder 'scripts', '/scripts'
+    config.vm.define "with_vitis" do |wv|
+        wv.vm.box = vm_box
+        wv.vm.hostname = 'with-vitis'
+        wv.disksize.size = '250GB'
 
-    config.vm.provision 'shell', inline: '/vagrant_mount/Xilinx_Unified_2021.2_1021_0703/xsetup -c /vagrant_mount/install_config.txt --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Add'
+        wv.vm.synced_folder 'vagrant_mount', '/vagrant_mount'
+        wv.vm.synced_folder 'scripts', '/scripts'
 
-    config.vm.provision 'shell', inline: 'apt update && apt full-upgrade -y'
-    config.vm.provision 'shell', inline: 'apt install xxd build-essential datamash gawk wget git-core diffstat unzip texinfo gcc-multilib build-essential chrpath socat libsdl1.2-dev xterm python3 tar libtinfo5 -y'
+        wv.vm.provider :virtualbox do |v|
+            v.memory = vm_ram
+            v.cpus = vm_cpus
+        end
+
+        wv.vm.provision 'shell', inline: install_apt_pkg
+        wv.vm.provision 'shell', inline: '/vagrant_mount/Xilinx_Unified_2021.2_1021_0703/xsetup -c /vagrant_mount/install_config.txt --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Add'
+    end
 end
