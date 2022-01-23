@@ -8,15 +8,15 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure('2') do |config|
-    config.vm.box = 'generic/ubuntu2004'
-    config.disksize.size = '200GB'
-
-    MEMORY = 16384
-    CPUS = 8
-
     unless Vagrant.has_plugin?("vagrant-disksize")
         raise  Vagrant::Errors::VagrantError.new, "vagrant-disksize plugin is missing. Please install it using 'vagrant plugin install vagrant-disksize' and rerun 'vagrant up'"
     end
+
+    config.vm.box = "ubuntu/focal64"
+    config.disksize.size = '250GB'
+
+    MEMORY = 16384
+    CPUS = 8
 
     config.vm.provider :virtualbox do |v|
         v.memory = MEMORY

@@ -7,4 +7,6 @@ curr_script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && 
 set -e
 
 cd "${curr_script_dir}"
-vagrant up --provider=libvirt && vagrant destroy -f
+
+# vagrant destroy -f
+vagrant up --provider=virtualbox
