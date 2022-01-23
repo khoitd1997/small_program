@@ -10,3 +10,4 @@ cd "${curr_script_dir}"
 
 # vagrant destroy -f
 vagrant up --provider=virtualbox
+vagrant ssh

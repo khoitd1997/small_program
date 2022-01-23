@@ -7,6 +7,7 @@ build_dir="${PWD}"
 
 echo "Starting Yocto Build"
 
+rm -rf yocto_test
 git clone https://github.com/khoitd1997/yocto_test.git
 
 cd yocto_test
