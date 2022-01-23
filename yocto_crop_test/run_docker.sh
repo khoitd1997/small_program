@@ -11,11 +11,10 @@ mkdir -p "${workdir}"
 
 # the default image doesn't allow installing additional tool
 # so we have to extend it a bit and then build our own
-sudo docker build -t yocto_build_container .
+sudo docker build -t yocto_build_container - < "${curr_script_dir}/Dockerfile"
 
 sudo docker run --rm -it \
     -v "${workdir}":/workdir \
     -v "${scripts_dir}":/scripts \
-    -v /tools:/tools \
     --workdir=/workdir \
     yocto_build_container "/scripts/build_yocto.sh"
