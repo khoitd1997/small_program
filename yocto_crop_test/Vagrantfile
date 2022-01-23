@@ -19,7 +19,7 @@ Vagrant.configure('2') do |config|
     config.vm.define "without_vitis" do |wv|
         wv.vm.box = vm_box
         wv.vm.hostname = 'without-vitis'
-        wv.disksize.size = '70GB'
+        wv.disksize.size = '120GB'
 
         wv.vm.synced_folder 'vagrant_mount', '/vagrant_mount'
         wv.vm.synced_folder 'scripts', '/scripts'
@@ -35,7 +35,7 @@ Vagrant.configure('2') do |config|
     config.vm.define "with_vitis" do |wv|
         wv.vm.box = vm_box
         wv.vm.hostname = 'with-vitis'
-        wv.disksize.size = '250GB'
+        wv.disksize.size = '280GB'
 
         wv.vm.synced_folder 'vagrant_mount', '/vagrant_mount'
         wv.vm.synced_folder 'scripts', '/scripts'
