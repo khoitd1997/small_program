@@ -7,6 +7,8 @@ build_dir="${PWD}"
 
 echo "Starting Yocto Build"
 
+git lfs install --skip-repo
+
 rm -rf yocto_test
 git clone https://github.com/khoitd1997/yocto_test.git
 
