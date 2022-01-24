@@ -1,11 +1,6 @@
-// this is here to pass compilation
-extern "C" void _exit(int)
-{
-    while(1) {}
-}
-
-int main()
+extern "C" void myFunc()
 {
     
-    return 0;
+    int number;
+    number += 1;
 }
