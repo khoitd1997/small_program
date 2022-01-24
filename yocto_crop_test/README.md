@@ -7,6 +7,8 @@ For testing the [Crop container](https://github.com/crops/poky-container) that c
 ```shell
 # install required vagrant plugins
 vagrant plugin install vagrant-disksize
+
+sudo apt install virtualbox -y
 ```
 
 ## Usage
