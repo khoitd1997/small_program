@@ -10,6 +10,6 @@ counter=0
 while :
 do
     echo "On test iteration number ${counter}"
-	bash "${curr_script_dir}/run_docker.sh"
+	bash "${curr_script_dir}/run_podman.sh"
     (( counter++ ))
 done

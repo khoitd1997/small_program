@@ -4,10 +4,13 @@ For testing the [Crop container](https://github.com/crops/poky-container) that c
 
 ## Setup
 
+Depending on what needs to be run, you might need `vagrant`, `docker`, `podman`
+
 ```shell
 # install required vagrant plugins
 vagrant plugin install vagrant-disksize
 
+# for Vagrant
 sudo apt install virtualbox -y
 ```
 
@@ -17,7 +20,10 @@ To run builds:
 
 ```shell
 cd <path-to-folder-of-this-README>
+
 ./run_docker.sh
+
+./run_podman.sh
 
 # this is fairly standalone and doesn't require a lot of provisions
 ./run_vagrant_without_vitis.sh

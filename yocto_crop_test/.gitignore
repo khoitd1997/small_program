@@ -1,3 +1,5 @@
-workdir/
+workdir_podman/
+workdir_docker/
+
 .vagrant/
 vagrant_mount/
