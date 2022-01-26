@@ -3,3 +3,6 @@ workdir_docker/
 
 .vagrant/
 vagrant_mount/
+
+# Virtualbox log
+*.log
