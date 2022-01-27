@@ -78,3 +78,8 @@ class FreeRTOSCriticalSectionGuard {
 
 // freeRTOS mostly only support one CPU so we just return a hardcoded number
 inline uint32_t getCurrCpu() { return 0; }
+
+#ifdef __linux
+// FreeRTOS linux port didn't include this so provide a stub
+inline bool xPortIsInsideInterrupt() { return false; }
+#endif

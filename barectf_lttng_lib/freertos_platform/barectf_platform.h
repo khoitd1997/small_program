@@ -23,9 +23,15 @@
  * SOFTWARE.
  */
 
-#include "barectf.h"
-
 #pragma once
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#include "barectf.h"
+#include "barectf_utils.h"
+
+#define USE_GETTIME_CLOCK
 
 struct BarectfExeInfo {
     std::string name = "";
@@ -61,11 +67,26 @@ class BarectfBaseTrace {
    protected:
     static uint64_t getClockValueCallback(void* const data)
         __attribute__((no_instrument_function)) {
+#ifdef USE_GETTIME_CLOCK
         (void)(data);
         struct timespec ts;
 
         clock_gettime(CLOCK_REALTIME, &ts);
         return ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+#else
+        double tickCount;
+
+        // TODO: Use a more accurate clock
+        // TODO: We probably need to do more xPortIsInsideInterrupt check for other functions as
+        // well
+        if (xPortIsInsideInterrupt()) {
+            tickCount = (double)xTaskGetTickCountFromISR();
+        } else {
+            tickCount = (double)xTaskGetTickCount();
+        }
+
+        return (uint64_t)((tickCount / pdMS_TO_TICKS(1)) * 1000000);
+#endif
     }
 
     uint8_t*     traceBuffer  = nullptr;

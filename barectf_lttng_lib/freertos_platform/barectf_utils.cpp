@@ -40,6 +40,9 @@ int32_t getTaskId(TaskHandle_t taskHandle) {
 void getThreadInfo(TaskHandle_t taskHandle, BarectfThreadInfo& threadInfo) {
     if (taskHandle == nullptr) { throw std::runtime_error("taskHandle is null in getThreadInfo"); }
     TaskStatus_t taskStatus;
+    // TODO: This results in the scheduler getting suspended so might be a good idea to
+    // use something else although most of the time when we are calling this,
+    // it should already be inside a critical section
     vTaskGetInfo(taskHandle, &taskStatus, pdFALSE, eInvalid);
 
     const int32_t taskId = (int32_t)taskStatus.xTaskNumber;
