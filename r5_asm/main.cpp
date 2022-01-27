@@ -3,12 +3,21 @@
 
 #include <arm_neon.h>
 
+// NOTE: Q registers are for SIMD instructions
+// intrinsics note:
+// https://developer.arm.com/documentation/dui0491/g/Using-NEON-Support/Intrinsics?lang=en
+
+// intrinsics example:
+// https://cpp.hotexamples.com/examples/-/-/vadd_s32/cpp-vadd_s32-function-examples.html
+
 extern "C" void add_ints(int * __restrict pa, int * __restrict pb, unsigned int n, int x)
 {
     unsigned int i;
 
     for(i = 0; i < (n & ~3); i++)
+    {
         pa[i] = pb[i] + x;
+    }
 }
 
 extern "C" void myFunc()

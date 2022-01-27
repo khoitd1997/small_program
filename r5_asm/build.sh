@@ -11,8 +11,12 @@ cd "${SCRIPT_DIR}"
 
 # NOTE: Look for vfpv3-d16 in the arm7-r reference manual
 # it indicates that this is the VFPv3 unit with 16 double word
+
+# NOTE: compiler won't generate vectorize call with this:
 # -mfpu=vfpv3-d16
-# -mfpu=neon
+# the below gets vectorization
+# -mfpu=neon-vfpv3
+
 ARCH_FLAG="-mcpu=cortex-r5 -mfloat-abi=hard"
 NICE_ASM_FLAG="-Wa,-adhln -fverbose-asm -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti "
 VECTORIZE_FLAG="-O1 -ftree-vectorize -fopt-info-vec-all -fopt-info"
