@@ -8,4 +8,4 @@ build_dir="${script_dir}/build"
 mkdir -p "${build_dir}"
 
 cd "${build_dir}"
-cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="${script_dir}/toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --target show_r5_bsp_in_vitis
+cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="${script_dir}/r5_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --target show_r5_bsp_in_vitis
