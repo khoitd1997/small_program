@@ -25,5 +25,7 @@ bsp setlib -name libmetal
 bsp setlib -name my_lwip211
 bsp setlib -name openamp
 
+bsp config lwip_dhcp true
+
 platform generate
 

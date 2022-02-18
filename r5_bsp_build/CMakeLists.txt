@@ -34,6 +34,7 @@ add_custom_target(r5_bsp_lib_target DEPENDS ${r5_lib_list})
 
 add_custom_target(
   show_r5_bsp_in_vitis
+  COMMAND ${CMAKE_COMMAND} -E sleep 2
   COMMAND "${VITIS_INSTALL_DIR}/bin/vitis" -lp "${CUSTOM_VITIS_REPO_PATH}"
           -workspace "${r5_workspace_dir}"
   WORKING_DIRECTORY "${vitis_build_dir}"
