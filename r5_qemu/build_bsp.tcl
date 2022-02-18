@@ -26,6 +26,4 @@ bsp setlib -name my_lwip211
 bsp setlib -name openamp
 
 platform generate
-# app create -name r5_test_app -platform HW1 -template "Zynq MP FSBL" -domain r5_freertos -lang skdafjlasdjfkla
-# app build -name r5_test_app
 
