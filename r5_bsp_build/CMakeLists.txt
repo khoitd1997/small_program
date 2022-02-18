@@ -22,7 +22,6 @@ set(r5_lib_list
 set(tcl_script_path "${CMAKE_CURRENT_SOURCE_DIR}/build_bsp.tcl")
 
 add_custom_command(
-  COMMAND ${CMAKE_COMMAND} -E remove_directory "${vitis_build_dir}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${vitis_build_dir}"
   COMMAND
     ${CMAKE_COMMAND} -E chdir "${vitis_build_dir}"
