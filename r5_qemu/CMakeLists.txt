@@ -16,7 +16,12 @@ target_include_directories(test_lib
                            PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_lib")
 
 set(app_src "${CMAKE_CURRENT_SOURCE_DIR}/src")
-add_executable(r5_test.elf "${app_src}/main.cpp")
+set(openamp_src "${app_src}/openamp")
+add_executable(
+  r5_test.elf
+  "${app_src}/main.cpp" "${openamp_src}/platform_info.c"
+  "${openamp_src}/rsc_table.c" "${openamp_src}/zynqmp_r5_a53_rproc.c")
+
 add_dependencies(r5_test.elf r5_bsp_lib_target)
 target_include_directories(r5_test.elf PUBLIC ${R5_BSP_EXPORT_INCLUDE_DIR})
 target_compile_options(r5_test.elf PUBLIC -g -Wall)

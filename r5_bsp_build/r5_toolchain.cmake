@@ -39,11 +39,11 @@ set(CMAKE_C_ARCHIVE_FINISH true)
 
 add_compile_definitions(ARMR5 UNDEFINE_FILE_OPS)
 
-# The linker require group arg to resolve circular dependency when needing to
-# link more libraries, we will have to modify this
+# The linker require group arg to resolve circular dependency when more
+# libraries are needed, add them to additional_lib
+set(additional_lib "-lfreertos,-llwip4,-lmetal,-lopen_amp")
 set(lib_link_flag
-    "-Wl,--start-group,-lxil,-lfreertos,-lgcc,-lc,-lstdc++,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lopen_amp,-lgcc,-lc,--end-group"
-)
+    "-Wl,--start-group,-lxil,${additional_lib},-lgcc,-lc,-lstdc++,--end-group")
 
 set(CMAKE_C_LINK_EXECUTABLE
     "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> ${lib_link_flag}"

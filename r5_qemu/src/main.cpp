@@ -2,8 +2,11 @@
 #include "xil_printf.h"
 
 #include "lib_src.h"
+#include "lwip/init.h"
 
 int main() {
+    lwip_init();
+
     xil_printf("1\n\r");
     xil_printf("2\n\r");
     xil_printf("3\n\r");
