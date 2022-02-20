@@ -15,6 +15,7 @@ add_library(test_lib "${CMAKE_CURRENT_SOURCE_DIR}/test_lib/lib_src.cpp")
 target_include_directories(
   test_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_lib"
                   "${R5_BSP_EXPORT_INCLUDE_DIR}")
+add_dependencies(test_lib r5_bsp_lib_target)
 
 set(app_src "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(openamp_src "${app_src}/openamp")
