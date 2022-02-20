@@ -12,8 +12,9 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../r5_bsp_build"
                  "${CMAKE_BINARY_DIR}/r5_bsp_build")
 
 add_library(test_lib "${CMAKE_CURRENT_SOURCE_DIR}/test_lib/lib_src.cpp")
-target_include_directories(test_lib
-                           PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_lib")
+target_include_directories(
+  test_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/test_lib"
+                  "${R5_BSP_EXPORT_INCLUDE_DIR}")
 
 set(app_src "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(openamp_src "${app_src}/openamp")

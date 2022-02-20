@@ -1,0 +1,30 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "description": "Default build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "../r5_bsp_build/r5_toolchain.cmake"
+            },
+            "environment": {
+                "MY_ENVIRONMENT_VARIABLE": "Test"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        }
+    ]
+}
