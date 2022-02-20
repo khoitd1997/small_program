@@ -112,28 +112,23 @@ def parseRegId(regId: str) -> Tuple[str, int, str]:
 
     return tmpArray[0], stringWithBaseToNum(tmpArray[1]), tmpArray[1]
 
-testMode = 0
-
 def getRegValue(regAbsAddr: int, accessWidthInBit: int, endian: str) -> int:
-    if testMode != 1:
-        devmemFd = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
-        pageSize = resource.getpagesize()
-        mappedOffset = regAbsAddr & (~(pageSize - 1))
-        inPageOffset = regAbsAddr - mappedOffset
+    devmemFd = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
+    pageSize = resource.getpagesize()
+    mappedOffset = regAbsAddr & (~(pageSize - 1))
+    inPageOffset = regAbsAddr - mappedOffset
 
-        with mmap.mmap(
-                fileno=devmemFd,
-                length=pageSize * 2,
-                flags=mmap.MAP_SHARED,
-                prot=mmap.PROT_READ,
-                offset=mappedOffset) as mm:
-            mm.seek(inPageOffset)
-            bytesArray = mm.read(int(accessWidthInBit / 8))
-            ret = int.from_bytes(bytesArray, byteorder=endian, signed=False)
+    with mmap.mmap(
+            fileno=devmemFd,
+            length=pageSize * 2,
+            flags=mmap.MAP_SHARED,
+            prot=mmap.PROT_READ,
+            offset=mappedOffset) as mm:
+        mm.seek(inPageOffset)
+        bytesArray = mm.read(int(accessWidthInBit / 8))
+        ret = int.from_bytes(bytesArray, byteorder=endian, signed=False)
 
-        os.close(devmemFd)
-    else:
-        ret = (0b101 << 2) | (0b100 << 5)
+    os.close(devmemFd)
 
     return ret
 
