@@ -197,20 +197,17 @@ def getRequiredIntValue(regSetDescription: dict, key: str) -> int:
 
 
 def main() -> int:
+    baseAddr = getRequiredIntValue(registerSpecification, "BaseAddress")
+    accessWidthInBit = getRequiredIntValue(registerSpecification, "AccessWidth")
 
-    regSetDescription = registerSpecification
-
-    baseAddr = getRequiredIntValue(regSetDescription, "BaseAddress")
-    accessWidthInBit = getRequiredIntValue(regSetDescription, "AccessWidth")
-
-    if "Endian" not in regSetDescription:
+    if "Endian" not in registerSpecification:
         raise ValueError(
             "Error: Missing Endian property")
 
-    endian = regSetDescription["Endian"]
-    del regSetDescription["Endian"]
+    endian = registerSpecification["Endian"]
+    del registerSpecification["Endian"]
 
-    for regId, bitfieldDescriptionList in regSetDescription.items():
+    for regId, bitfieldDescriptionList in registerSpecification.items():
         regName, regOffset, regOffsetStr = parseRegId(regId)
         print(
             f"{COLORS.YELLOW}{regName} Register(offset {regOffsetStr}){COLORS.RESET}")
