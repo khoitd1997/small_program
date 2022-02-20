@@ -24,10 +24,9 @@ _UNDEF_STACK_SIZE = DEFINED(_UNDEF_STACK_SIZE) ? _UNDEF_STACK_SIZE : 1024;
 MEMORY
 {
    psu_ocm_ram_0_MEM_0 : ORIGIN = 0xFFFC0000, LENGTH = 0x40000
-   psu_qspi_linear_0_MEM_0 : ORIGIN = 0xC0000000, LENGTH = 0x20000000
    psu_r5_0_atcm_MEM_0 : ORIGIN = 0x0, LENGTH = 0x10000
    psu_r5_0_btcm_MEM_0 : ORIGIN = 0x20000, LENGTH = 0x10000
-   psu_r5_ddr_0_MEM_0 : ORIGIN = 0x100000, LENGTH = 0x7FE00000
+   psu_r5_ddr_0_MEM_0 : ORIGIN = 0x3ed00000, LENGTH = 0x40000
 }
 
 /* Specify the default entry point to the program */
@@ -41,7 +40,7 @@ SECTIONS
 .vectors : {
    KEEP (*(.vectors))
    *(.boot)
-} > psu_r5_0_atcm_MEM_0
+} > psu_r5_ddr_0_MEM_0
 
 .text : {
    *(.text)

@@ -25,6 +25,14 @@ bsp setlib -name libmetal
 bsp setlib -name my_lwip211
 bsp setlib -name openamp
 
+bsp config stdout psu_uart_1
+bsp config stdin psu_uart_1
+
+bsp config minimal_stack_size 1000
+
+bsp config PSU_TTC0_Select false
+bsp config PSU_TTC1_Select true
+
 bsp config lwip_dhcp true
 
 platform generate
