@@ -1,19 +1,32 @@
-#!/usr/local/bin/python3
+#!/usr/bin/python3
 
 import os
 import sys
 import mmap
 import resource
 
-from typing import Tuple, List
+from typing import Tuple
 
-# based on this datasheet: https://cdn-shop.adafruit.com/datasheets/BST-BMP280-DS001-11.pdf
-testReg = {
+class COLORS:
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+
+    RESET = "\033[0m"
+
+# NOTE: Modify this table based on your hardware
+# below example is based on UART0 of this: https://www.xilinx.com/html_docs/registers/ug1087/ug1087-zynq-ultrascale-registers.html
+registerSpecification = {
     # NOTE: For all numeric values, they can be either dec, bin or hex
     # bin and hex need to be prefixed with 0b and 0x respectively
     #
     # base address all registers offset are based on
-    "BaseAddress": "0xB00A0000",
+    "BaseAddress": "0x00FF000000",
     # How many bits to access when reading a register
     "AccessWidth": "32",
     # Endianess of the register, can be "little" or "big"
@@ -22,61 +35,57 @@ testReg = {
     # example object that describes all the relevant field of the register
     # it will only print the fields you specified so you can skip over unimportant fields like
     # reserved
-    # name of register and its offset from base
-    "ctrl_meas:0xF4": {
-        # describe bit 0-15(inclusive) of the register
-        # can be just a single number to indicate this describes only a single bit
-        "7:5": {
-            # required property that describes the name of the bitfield
-            "Name": "Temperature Oversampling Config",
-            # optional, by default, use hex, can be bin, dec or hex
-            "DisplayNumberBase": "hex",
-            #
-            # how to decode the fields
-            # can be an object or a string
-            "ValueDescription": {
-                # key-value pair describing the meaning of specific values
-                # values not described, will be described as unknown
-                "0b000": "Skipped",
-                "0b001": "oversampling x1",
-                "0b010": "oversampling x2",
-                "0b011": "oversampling x4",
-                "0b0100": "oversampling x8",
 
-                "0b101": "oversampling x16",
-                "0b110": "oversampling x16",
-                "0b111": "oversampling x16"
+    # the key is the name of register and its offset from base
+    # the value is an object describing the different fields in a register
+    "mode_reg0:0x04": {
+        "5:3": {
+            "Name": "Parity type select",
+            # optional, by default, use hex, can be bin, dec or hex
+            "DisplayNumberBase": "bin",
+
+            # there are two ways to describe a field, with a list of enum
+            # or with a string
+            # the below demonstrates the enum case
+            "ValueDescription": {
+                "0b000": "even parity",
+                "0b001": "odd parity",
+                "0b010": "forced to 0 parity (space)",
+                "0b011": "forced to 1 parity (mark)",
+                "*": "no parity",
             }
         },
-        "4:2": {
-            "Name": "Pressure oversampling config",
+        "2:1": {
+            "Name": "Character length select",
             "DisplayNumberBase": "bin",
-            # the other way to describe the field
             "ValueDescription": {
-                # key-value pair describing the meaning of specific values
-                # values not described, will be described as unknown
-                "0b000": "Skipped",
-                "0b001": "oversampling x1",
-                "0b010": "oversampling x2",
-                "0b011": "oversampling x4",
-                "0b0100": "oversampling x8",
-                # specify other values mean x16
-                "*": "oversampling x16"
+                "0b11": "6 bits",
+                "0b10": "7 bits",
+                "*": "8 bits",
+            }
+        },
+        "0": {
+            "Name": "Clock source select",
+            "DisplayNumberBase": "bin",
+            "ValueDescription": {
+                "0b000": "UART_REF_CLK",
+                "0b001": "UART_REF_CLK/8",
             }
         }
     },
-    "status:0xF3": {
-        "0": {
-            "Name": "im_update",
-            "DisplayNumberBase": "bin",
-            # the other way to describe the field
-            "ValueDescription": "Specify value of im_update[0]"
+    "Rcvr_timeout_reg0:0x1C": {
+        "7:0": {
+            "Name": "Receiver timeout value",
+            "DisplayNumberBase": "hex",
+
+            # this shows the non enum case where this string is always displayed
+            # regardless of the register's value, useful for open ended parameter
+            "ValueDescription": "Specify Value of Receiver Timeout"
         }
     }
 }
 
-resultTableHeaders = ["Name", "RawValue", "Description"]
-resultRowFormat = "{:<4}{:<40}{:<32}{:}"
+resultRowFormat = "{:<4}{:<50}{:<10}{:}"
 
 
 def stringWithBaseToNum(str: str) -> int:
@@ -92,11 +101,6 @@ def stringWithBaseToNum(str: str) -> int:
 
     return int(str, 10)
 
-
-def printResultTableHeader() -> None:
-    print(resultRowFormat.format("", *resultTableHeaders))
-
-
 def printResultTableEntry(entry: Tuple) -> None:
     print(resultRowFormat.format("", *entry))
 
@@ -108,17 +112,13 @@ def parseRegId(regId: str) -> Tuple[str, int, str]:
 
     return tmpArray[0], stringWithBaseToNum(tmpArray[1]), tmpArray[1]
 
-
-# TODO: remove when done testing
-testMode = 1
-
+testMode = 0
 
 def getRegValue(regAbsAddr: int, accessWidthInBit: int, endian: str) -> int:
     if testMode != 1:
-        # TODO: test this
         devmemFd = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
         pageSize = resource.getpagesize()
-        mappedOffset = regAbsAddr & (pageSize - 1)
+        mappedOffset = regAbsAddr & (~(pageSize - 1))
         inPageOffset = regAbsAddr - mappedOffset
 
         with mmap.mmap(
@@ -128,7 +128,7 @@ def getRegValue(regAbsAddr: int, accessWidthInBit: int, endian: str) -> int:
                 prot=mmap.PROT_READ,
                 offset=mappedOffset) as mm:
             mm.seek(inPageOffset)
-            bytesArray = mm.read(accessWidthInBit / 8)
+            bytesArray = mm.read(int(accessWidthInBit / 8))
             ret = int.from_bytes(bytesArray, byteorder=endian, signed=False)
 
         os.close(devmemFd)
@@ -187,7 +187,7 @@ def printBitfield(regVal: int, bitfieldRange: str, bitfieldDescription: object) 
                 break
 
     printResultTableEntry(
-        (bitfieldDescription['Name'], displayVal, description))
+        (f"{COLORS.CYAN}{bitfieldDescription['Name'] + ' Field'}{COLORS.RESET}", displayVal, f"{COLORS.BLUE}{description}{COLORS.RESET}"))
 
 
 def getRequiredIntValue(regSetDescription: dict, key: str) -> int:
@@ -203,7 +203,7 @@ def getRequiredIntValue(regSetDescription: dict, key: str) -> int:
 
 def main() -> int:
 
-    regSetDescription = testReg
+    regSetDescription = registerSpecification
 
     baseAddr = getRequiredIntValue(regSetDescription, "BaseAddress")
     accessWidthInBit = getRequiredIntValue(regSetDescription, "AccessWidth")
@@ -218,8 +218,7 @@ def main() -> int:
     for regId, bitfieldDescriptionList in regSetDescription.items():
         regName, regOffset, regOffsetStr = parseRegId(regId)
         print(
-            f"{regName} Register(offset {regOffsetStr})")
-        printResultTableHeader()
+            f"{COLORS.YELLOW}{regName} Register(offset {regOffsetStr}){COLORS.RESET}")
 
         regVal = getRegValue(baseAddr + regOffset, accessWidthInBit, endian)
 
