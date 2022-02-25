@@ -10,7 +10,10 @@
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [],
-            "preLaunchTask": "r5_debug_fsbl_task",
+
+            // "preLaunchTask": "r5_debug_fsbl_task",
+            "preLaunchTask": "r5_debug_remoteproc_task",
+
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],

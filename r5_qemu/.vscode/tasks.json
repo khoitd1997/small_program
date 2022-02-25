@@ -7,6 +7,11 @@
             "label": "r5_debug_fsbl_task",
             "type": "shell",
             "command": "/tools/Xilinx/Vitis/2020.1/bin/xsct \"${workspaceFolder}/.vscode/r5_debug_fsbl.tcl\" \"${command:cmake.launchTargetPath}\"",
+        },
+        {
+            "label": "r5_debug_remoteproc_task",
+            "type": "shell",
+            "command": "/tools/Xilinx/Vitis/2020.1/bin/xsct \"${workspaceFolder}/.vscode/r5_debug_remoteproc.tcl\" \"${command:cmake.launchTargetPath}\"",
         }
     ]
 }
